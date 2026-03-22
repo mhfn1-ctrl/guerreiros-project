@@ -1,65 +1,40 @@
 // Studio 24 - Netlify Function: Database API
-// Uses Netlify Blobs as persistent key-value store
-
 const { getStore } = require("@netlify/blobs");
 
-const CORS_HEADERS = {
+const CORS = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type, X-Auth-Token",
+  "Access-Control-Allow-Headers": "Content-Type",
   "Content-Type": "application/json",
 };
 
-const VALID_KEYS = ["s24_inv", "s24_sales", "s24_cust", "s24_exp", "s24_products"];
+const KEYS = ["s24_inv","s24_sales","s24_cust","s24_exp","s24_products"];
 
 exports.handler = async (event) => {
-  // CORS preflight
-  if (event.httpMethod === "OPTIONS") {
-    return { statusCode: 204, headers: CORS_HEADERS, body: "" };
-  }
+  if (event.httpMethod === "OPTIONS") return { statusCode: 204, headers: CORS, body: "" };
 
   try {
-    const store = getStore("studio24");
+    const store = getStore({ name: "studio24", consistency: "strong" });
     const { httpMethod, queryStringParameters, body } = event;
     const key = queryStringParameters?.key;
 
-    // ── GET: fetch a value ────────────────────────────────────────────────────
     if (httpMethod === "GET") {
-      if (!key || !VALID_KEYS.includes(key)) {
-        return { statusCode: 400, headers: CORS_HEADERS, body: JSON.stringify({ error: "Invalid key" }) };
-      }
+      if (!key || !KEYS.includes(key))
+        return { statusCode: 400, headers: CORS, body: JSON.stringify({ error: "Chave inválida" }) };
       const value = await store.get(key);
-      return {
-        statusCode: 200,
-        headers: CORS_HEADERS,
-        body: JSON.stringify({ key, value: value ? JSON.parse(value) : null }),
-      };
+      return { statusCode: 200, headers: CORS, body: JSON.stringify({ key, value: value ? JSON.parse(value) : null }) };
     }
 
-    // ── POST: save a value ────────────────────────────────────────────────────
     if (httpMethod === "POST") {
-      const payload = JSON.parse(body || "{}");
-      const { key: pKey, value } = payload;
-
-      if (!pKey || !VALID_KEYS.includes(pKey)) {
-        return { statusCode: 400, headers: CORS_HEADERS, body: JSON.stringify({ error: "Invalid key" }) };
-      }
-
+      const { key: pKey, value } = JSON.parse(body || "{}");
+      if (!pKey || !KEYS.includes(pKey))
+        return { statusCode: 400, headers: CORS, body: JSON.stringify({ error: "Chave inválida" }) };
       await store.set(pKey, JSON.stringify(value));
-      return {
-        statusCode: 200,
-        headers: CORS_HEADERS,
-        body: JSON.stringify({ ok: true, key: pKey }),
-      };
+      return { statusCode: 200, headers: CORS, body: JSON.stringify({ ok: true }) };
     }
 
-    return { statusCode: 405, headers: CORS_HEADERS, body: JSON.stringify({ error: "Method not allowed" }) };
+    return { statusCode: 405, headers: CORS, body: JSON.stringify({ error: "Método não permitido" }) };
   } catch (err) {
-    console.error("DB function error:", err);
-    return {
-      statusCode: 500,
-      headers: CORS_HEADERS,
-      body: JSON.stringify({ error: "Internal server error", detail: err.message }),
-    };
+    return { statusCode: 500, headers: CORS, body: JSON.stringify({ error: err.message }) };
   }
 };
