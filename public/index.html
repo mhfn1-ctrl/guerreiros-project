@@ -875,10 +875,10 @@ function renderProducts(filter='all'){
       const cq=cart.filter(c=>c.productId===p.id&&c.size===sz).reduce((a,c)=>a+c.quantity,0);
       const avail=st-cq;
       const out=avail<=0;
-      return`<button class="size-chip${out?' out':''}${sz===selectedSz?' selected':''}"
-        onclick="${out?'':``selectSize('${p.id}','${sz}')``}"
-        title="${out?'Sem estoque':`${avail} disponível${avail!==1?'s':''}`}"
-      >${sz}${!out&&avail<=2?`<sup style="font-size:8px;color:#f87171">!</sup>`:''}</button>`;
+      const oc = out ? '' : "selectSize('" + p.id + "','" + sz + "')";
+      const ttl = out ? 'Sem estoque' : avail + ' disponível' + (avail!==1?'s':'');
+      const sup = (!out&&avail<=2) ? '<sup style="font-size:8px;color:#f87171">!</sup>' : '';
+      return '<button class="size-chip'+(out?' out':'')+(sz===selectedSz?' selected':'')+'" onclick="'+oc+'" title="'+ttl+'">'+sz+sup+'</button>';
     }).join('');
 
     const div=document.createElement('div');
