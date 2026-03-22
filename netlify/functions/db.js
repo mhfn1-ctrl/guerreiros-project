@@ -14,7 +14,13 @@ exports.handler = async (event) => {
   if (event.httpMethod === "OPTIONS") return { statusCode: 204, headers: CORS, body: "" };
 
   try {
-    const store = getStore({ name: "studio24", consistency: "strong" });
+    const store = getStore({
+      name: "studio24",
+      consistency: "strong",
+      siteID: process.env.NETLIFY_SITE_ID,
+      token: process.env.NETLIFY_TOKEN,
+    });
+
     const { httpMethod, queryStringParameters, body } = event;
     const key = queryStringParameters?.key;
 
