@@ -1,0 +1,8 @@
+{
+  "name": "studio24-fitness",
+  "version": "1.0.0",
+  "description": "Studio 24 Fitness - Sistema de Gestão e Catálogo",
+  "dependencies": {
+    "@netlify/blobs": "^7.3.0"
+  }
+}

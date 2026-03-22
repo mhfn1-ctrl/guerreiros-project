@@ -1,0 +1,908 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+<title>Studio 24 — Gestão</title>
+<meta name="theme-color" content="#111827"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="Studio 24"/>
+<script src="https://cdn.tailwindcss.com"></script>
+<script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/prop-types@15/prop-types.min.js"></script>
+<script src="https://unpkg.com/recharts@2.10.4/umd/Recharts.js"></script>
+<script src="https://unpkg.com/@babel/standalone@7.23.2/babel.min.js"></script>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;background:#111827;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;overscroll-behavior:none}
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:#374151;border-radius:4px}
+input[type=number]::-webkit-inner-spin-button{opacity:1}
+input,select,textarea{font-family:inherit}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+.fade-in{animation:fadeIn 0.25s ease}
+.sidebar-transition{transition:transform 0.3s cubic-bezier(0.4,0,0.2,1)}
+/* Login screen */
+#login-screen{position:fixed;inset:0;background:#0d1117;display:flex;align-items:center;justify-content:center;z-index:9999;padding:20px}
+.login-box{background:#1f2937;border:1px solid #374151;border-radius:20px;padding:40px 32px;width:100%;max-width:380px}
+.login-logo{display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:32px}
+.login-icon{width:52px;height:52px;background:#2563eb;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:26px}
+.login-title{font-size:22px;font-weight:700;color:#fff}
+.login-sub{font-size:12px;color:#6b7280}
+.login-field{margin-bottom:14px}
+.login-field label{display:block;font-size:11px;color:#9ca3af;letter-spacing:.1em;text-transform:uppercase;margin-bottom:6px}
+.login-field input{width:100%;background:#111827;border:1.5px solid #374151;border-radius:10px;color:#fff;font-size:15px;padding:11px 14px;outline:none;transition:border-color .2s}
+.login-field input:focus{border-color:#3b82f6}
+.login-btn{width:100%;background:#2563eb;border:none;border-radius:10px;color:#fff;font-size:16px;font-weight:600;padding:13px;cursor:pointer;transition:background .2s;margin-top:6px}
+.login-btn:hover{background:#1d4ed8}
+.login-btn:active{transform:scale(.98)}
+.login-error{background:#450a0a;border:1px solid #dc2626;border-radius:8px;color:#f87171;font-size:13px;padding:10px 14px;margin-top:12px;display:none}
+.login-error.show{display:block}
+/* Sync badge */
+.sync-badge{display:flex;align-items:center;gap:5px;font-size:11px;padding:3px 10px;border-radius:50px}
+.sync-ok{background:#064e3b;color:#6ee7b7;border:1px solid #065f46}
+.sync-err{background:#450a0a;color:#f87171;border:1px solid #7f1d1d}
+.sync-loading{background:#1e3a5f;color:#93c5fd;border:1px solid #1e40af}
+.dot-pulse{width:6px;height:6px;border-radius:50%;animation:pulse 1s infinite}
+</style>
+</head>
+<body>
+
+<!-- ── Login Screen ── -->
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-logo">
+      <div class="login-icon">👕</div>
+      <div>
+        <div class="login-title">Studio 24</div>
+        <div class="login-sub">Sistema de Gestão</div>
+      </div>
+    </div>
+    <div class="login-field">
+      <label>Usuário</label>
+      <input type="text" id="loginUser" placeholder="Digite seu usuário" autocomplete="username"/>
+    </div>
+    <div class="login-field">
+      <label>Senha</label>
+      <input type="password" id="loginPass" placeholder="Digite sua senha" autocomplete="current-password"/>
+    </div>
+    <button class="login-btn" onclick="doLogin()">Entrar</button>
+    <div class="login-error" id="loginError">Usuário ou senha incorretos.</div>
+  </div>
+</div>
+
+<div id="root"></div>
+
+<script>
+// ── Authentication ────────────────────────────────────────────────────────────
+const AUTH_USER = "nicolas";
+const AUTH_PASS = "1107/Nic";
+const SESSION_KEY = "s24_auth";
+
+function doLogin(){
+  const u = document.getElementById("loginUser").value.trim();
+  const p = document.getElementById("loginPass").value;
+  if(u === AUTH_USER && p === AUTH_PASS){
+    sessionStorage.setItem(SESSION_KEY, "1");
+    document.getElementById("login-screen").style.display = "none";
+    document.getElementById("loginError").classList.remove("show");
+  } else {
+    document.getElementById("loginError").classList.add("show");
+    document.getElementById("loginPass").value = "";
+  }
+}
+
+// Allow Enter key
+document.addEventListener("keydown", e => {
+  if(e.key === "Enter" && document.getElementById("login-screen").style.display !== "none"){
+    doLogin();
+  }
+});
+
+// Check existing session
+if(sessionStorage.getItem(SESSION_KEY) === "1"){
+  document.getElementById("login-screen").style.display = "none";
+}
+</script>
+
+<script type="text/babel">
+const {useState,useEffect,useRef,useMemo,useCallback}=React;
+const {AreaChart,Area,BarChart,Bar,XAxis,YAxis,CartesianGrid,Tooltip,ResponsiveContainer,LineChart,Line}=Recharts;
+
+// ── Cloud DB API ──────────────────────────────────────────────────────────────
+// When hosted on Netlify, uses /api/db (Netlify Function with Blobs).
+// Locally, falls back to localStorage only.
+const API_BASE = "/api/db";
+
+async function cloudGet(key) {
+  try {
+    const r = await fetch(`${API_BASE}?key=${key}`);
+    if(!r.ok) return null;
+    const d = await r.json();
+    return d.value;
+  } catch(_) { return null; }
+}
+
+async function cloudSet(key, value) {
+  try {
+    const r = await fetch(API_BASE, {
+      method: "POST",
+      headers: {"Content-Type":"application/json"},
+      body: JSON.stringify({key, value})
+    });
+    return r.ok;
+  } catch(_) { return false; }
+}
+
+// ── Storage helpers (localStorage + cloud sync) ───────────────────────────────
+const lsave=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(_){}};
+const lload=(k,d=null)=>{try{const r=localStorage.getItem(k);return r?JSON.parse(r):d}catch(_){return d}};
+
+// ── Constantes ────────────────────────────────────────────────────────────────
+const DEFAULT_PRODUCTS=[
+  {id:"MBL18",code:"MBL18",name:"Camisa Poliamida Lisa",color:"Preto",category:"Camisa",colorHex:"#1a1a2e",price:89.90,cost:44.00,sizes:["P","M","G","GG"],material:"91% Poliamida · 9% Elastano",active:true},
+  {id:"MBL5", code:"MBL5", name:"Camisa Poliamida Mescla",color:"Preto Mescla",category:"Camisa",colorHex:"#3a3a3a",price:99.90,cost:49.00,sizes:["P","M","G"],material:"96% Poliamida · 4% Elastano",active:true},
+  {id:"MBL4", code:"MBL4", name:"Camisa Poliamida Mescla",color:"Azul Marinho",category:"Camisa",colorHex:"#1a3a6b",price:99.90,cost:49.00,sizes:["P","M","G"],material:"96% Poliamida · 4% Elastano",active:true},
+  {id:"MBL3", code:"MBL3", name:"Camisa Poliamida Mescla",color:"Grafite",category:"Camisa",colorHex:"#5a5a5a",price:99.90,cost:49.00,sizes:["P","M","G"],material:"96% Poliamida · 4% Elastano",active:true},
+  {id:"MBL10",code:"MBL10",name:"Camisa Modal",color:"Verde Bandeira",category:"Camisa",colorHex:"#004d00",price:99.90,cost:49.00,sizes:["P","M","G"],material:"96% Modal · 4% Elastano",active:true},
+  {id:"MBL11",code:"MBL11",name:"Camisa Modal",color:"Vermelho",category:"Camisa",colorHex:"#7f0000",price:99.90,cost:49.00,sizes:["P","M","G"],material:"96% Modal · 4% Elastano",active:true},
+  {id:"MSH2", code:"MSH2", name:"Bermuda com Elástico",color:"Chumbo",category:"Bermuda",colorHex:"#4a4a4a",price:89.90,cost:44.00,sizes:["P","M","G","GG"],material:"Poliamida · Elastano",active:true},
+];
+const MONTHS=["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
+const fmt=n=>new Intl.NumberFormat("pt-BR",{style:"currency",currency:"BRL"}).format(n||0);
+const today=()=>new Date().toISOString().split("T")[0];
+const PAY_COLORS={dinheiro:"green",pix:"blue",débito:"purple",crédito:"yellow",crediário:"gray"};
+const CAT_COLORS={operacional:"blue",transporte:"amber",marketing:"purple",fornecedor:"green",aluguel:"red",outros:"gray"};
+
+// ── Ícones ────────────────────────────────────────────────────────────────────
+const Icon=({d,s=16,c="currentColor",sw=2})=>(
+  <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth={sw} strokeLinecap="round" strokeLinejoin="round">
+    {Array.isArray(d)?d.map((p,i)=><path key={i} d={p}/>):<path d={d}/>}
+  </svg>
+);
+const IBar=({s})=><Icon s={s} d={["M18 20V10","M12 20V4","M6 20v-6"]}/>;
+const IPkg=({s})=><Icon s={s} d={["M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z","M3.27 6.96L12 12.01l8.73-5.05","M12 22.08V12"]}/>;
+const ICart=({s})=><Icon s={s} d={["M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z","M3 6h18","M16 10a4 4 0 0 1-8 0"]}/>;
+const IUsers=({s})=><Icon s={s} d={["M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2","M23 21v-2a4 4 0 0 0-3-3.87","M16 3.13a4 4 0 0 1 0 7.75"]}/>;
+const ITrend=({s})=><Icon s={s} d="M23 6l-9.5 9.5-5-5L1 18"/>;
+const IDollar=({s})=><Icon s={s} d={["M12 1v22","M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"]}/>;
+const IList=({s})=><Icon s={s} d={["M9 12h6","M9 8h6","M9 16h6","M5 3h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"]}/>;
+const IMenu=({s})=><Icon s={s} d={["M3 12h18","M3 6h18","M3 18h18"]}/>;
+const IPlus=({s})=><Icon s={s} d={["M12 5v14","M5 12h14"]}/>;
+const IMinus=({s})=><Icon s={s} d="M5 12h14"/>;
+const ISearch=({s})=><Icon s={s} d={["M11 18a7 7 0 1 0 0-14 7 7 0 0 0 0 14z","M21 21l-4.35-4.35"]}/>;
+const ITag=({s})=><Icon s={s} d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/>;
+const IEdit=({s})=><Icon s={s} d={["M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7","M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"]}/>;
+const ITrash=({s})=><Icon s={s} d={["M3 6h18","M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"]}/>;
+const ISave=({s})=><Icon s={s} d={["M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z","M17 21v-8H7v8","M7 3v5h8"]}/>;
+const IWarn=({s})=><Icon s={s} d={["M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z","M12 9v4","M12 17h.01"]}/>;
+const ICheck=({s})=><Icon s={s} d={["M22 11.08V12a10 10 0 1 1-5.93-9.14","M22 4L12 14.01l-3-3"]}/>;
+const IWallet=({s})=><Icon s={s} d={["M21 12V7H5a2 2 0 0 1 0-4h14v4","M3 5v14a2 2 0 0 0 2 2h16v-5H5a2 2 0 0 1 0-4h16"]}/>;
+const IUp=({s})=><Icon s={s} d="M7 17l9.2-9.2M17 17V7H7"/>;
+const IDown=({s})=><Icon s={s} d="M7 7l9.2 9.2M17 7v10H7"/>;
+const ICloud=({s})=><Icon s={s} d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/>;
+const IRefresh=({s})=><Icon s={s} d={["M1 4v6h6","M23 20v-6h-6","M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"]}/>;
+const ILogout=({s})=><Icon s={s} d={["M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4","M16 17l5-5-5-5","M21 12H9"]}/>;
+const IPackage=({s})=><Icon s={s} d={["M12 2l9 4.5v9L12 20l-9-4.5v-9L12 2z","M12 20v-9","M3 6.5l9 4.5 9-4.5"]}/>;
+
+// ── Componentes base ──────────────────────────────────────────────────────────
+const Card=({children,className=""})=>(
+  <div className={`bg-gray-800 rounded-2xl border border-gray-700 p-5 ${className}`}>{children}</div>
+);
+const Badge=({children,color="gray"})=>{
+  const c={gray:"bg-gray-700 text-gray-300",green:"bg-emerald-900/60 text-emerald-400",red:"bg-red-900/60 text-red-400",blue:"bg-blue-900/60 text-blue-400",yellow:"bg-yellow-900/60 text-yellow-400",purple:"bg-purple-900/60 text-purple-400",amber:"bg-amber-900/60 text-amber-400"};
+  return <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${c[color]||c.gray}`}>{children}</span>;
+};
+const ProductThumb=({product,size=48})=>(
+  <div className="rounded-xl flex items-center justify-center overflow-hidden flex-shrink-0"
+    style={{width:size,height:size,background:`linear-gradient(145deg,${product.colorHex}dd,${product.colorHex}66)`}}>
+    <span style={{fontSize:size*0.44}}>{product.category==="Bermuda"?"🩳":"👕"}</span>
+  </div>
+);
+const Metric=({label,value,sub,IconEl,color="text-blue-400",trend})=>(
+  <Card>
+    <div className="flex items-start justify-between mb-3">
+      <span className="text-xs text-gray-400 uppercase tracking-widest font-medium leading-tight">{label}</span>
+      <div className={`w-8 h-8 rounded-xl flex items-center justify-center bg-gray-700 ${color}`}><IconEl s={15}/></div>
+    </div>
+    <p className="text-2xl font-bold text-white leading-none">{value}</p>
+    {sub&&<p className={`text-xs mt-1.5 flex items-center gap-1 ${trend>0?"text-emerald-400":trend<0?"text-red-400":"text-gray-400"}`}>
+      {trend>0?<IUp s={11}/>:trend<0?<IDown s={11}/>:null}{sub}
+    </p>}
+  </Card>
+);
+
+// ── Sync Status Component ────────────────────────────────────────────────────
+function SyncStatus({status,lastSync,onSync}){
+  const labels={idle:"Sincronizado",syncing:"Sincronizando...",error:"Erro na nuvem (offline)"};
+  const cls={idle:"sync-ok",syncing:"sync-loading",error:"sync-err"};
+  const dotCls={idle:"bg-emerald-400",syncing:"bg-blue-400 dot-pulse",error:"bg-red-400"};
+  return(
+    <button onClick={onSync} title="Sincronizar agora" className={`sync-badge ${cls[status]} cursor-pointer hover:opacity-80 transition-opacity`}>
+      <span className={`dot-pulse ${dotCls[status]}`} style={{width:6,height:6,borderRadius:'50%',display:'inline-block',animation:status==='syncing'?'pulse 1s infinite':undefined}}/>
+      {labels[status]}
+      {lastSync&&status!=='syncing'&&<span className="opacity-60">{lastSync}</span>}
+    </button>
+  );
+}
+
+// ── DASHBOARD ─────────────────────────────────────────────────────────────────
+function Dashboard({sales,expenses,inventory,products}){
+  const PRODUCTS=products;
+  const now=new Date(),cm=now.getMonth(),cy=now.getFullYear();
+  const mSales=sales.filter(s=>{const d=new Date(s.date+"T12:00");return d.getMonth()===cm&&d.getFullYear()===cy});
+  const pSales=sales.filter(s=>{const d=new Date(s.date+"T12:00");return d.getMonth()===(cm===0?11:cm-1)&&d.getFullYear()===(cm===0?cy-1:cy)});
+  const revenue=mSales.reduce((a,s)=>a+s.total,0);
+  const prevRev=pSales.reduce((a,s)=>a+s.total,0);
+  const cogs=mSales.reduce((a,s)=>a+(s.cost||0),0);
+  const monthExp=expenses.filter(e=>{const d=new Date(e.date+"T12:00");return d.getMonth()===cm&&d.getFullYear()===cy}).reduce((a,e)=>a+e.amount,0);
+  const profit=revenue-cogs-monthExp;
+  const avgTicket=mSales.length>0?revenue/mSales.length:0;
+  const totalItems=Object.values(inventory).reduce((a,v)=>a+Object.values(v).reduce((b,n)=>b+n,0),0);
+  const trendRev=prevRev>0?((revenue-prevRev)/prevRev*100).toFixed(1):null;
+  const cashFlow=Array.from({length:6},(_,i)=>{
+    const d=new Date(cy,cm-5+i,1),m=d.getMonth(),y=d.getFullYear();
+    const rev=sales.filter(s=>{const sd=new Date(s.date+"T12:00");return sd.getMonth()===m&&sd.getFullYear()===y}).reduce((a,s)=>a+s.total,0);
+    const exp=expenses.filter(e=>{const ed=new Date(e.date+"T12:00");return ed.getMonth()===m&&ed.getFullYear()===y}).reduce((a,e)=>a+e.amount,0);
+    const cg=sales.filter(s=>{const sd=new Date(s.date+"T12:00");return sd.getMonth()===m&&sd.getFullYear()===y}).reduce((a,s)=>a+(s.cost||0),0);
+    return{mes:MONTHS[m],receita:+rev.toFixed(2),lucro:+(rev-exp-cg).toFixed(2)};
+  });
+  const prodMap={};
+  sales.forEach(s=>{if(!prodMap[s.productId])prodMap[s.productId]={qty:0,rev:0};prodMap[s.productId].qty+=s.quantity;prodMap[s.productId].rev+=s.total;});
+  const topProds=Object.entries(prodMap).sort((a,b)=>b[1].rev-a[1].rev).slice(0,4).map(([id,v])=>{
+    const p=PRODUCTS.find(x=>x.id===id);return{...v,name:p?`${p.name} ${p.color}`:id,id,product:p};
+  });
+  const lowStock=PRODUCTS.filter(p=>{const inv=inventory[p.id]||{};return p.sizes.some(sz=>(inv[sz]||0)<3);});
+
+  return(
+    <div className="space-y-6 fade-in">
+      <div>
+        <h1 className="text-2xl font-bold text-white">Dashboard</h1>
+        <p className="text-gray-400 text-sm mt-1">{MONTHS[cm]} de {cy} — visão geral do negócio</p>
+      </div>
+      <div className="grid grid-cols-2 gap-3">
+        <Metric label="Receita" value={fmt(revenue)} sub={trendRev?`${trendRev>0?"+":""}${trendRev}% vs mês anterior`:"—"} IconEl={IDollar} color="text-blue-400" trend={trendRev}/>
+        <Metric label="Lucro" value={fmt(profit)} sub={revenue>0?`Margem ${((profit/revenue)*100).toFixed(1)}%`:"—"} IconEl={ITrend} color={profit>=0?"text-emerald-400":"text-red-400"} trend={profit}/>
+        <Metric label="Ticket Médio" value={fmt(avgTicket)} sub={`${mSales.length} venda${mSales.length!==1?"s":""}`} IconEl={ITag} color="text-purple-400"/>
+        <Metric label="Estoque Total" value={totalItems} sub={lowStock.length>0?`${lowStock.length} c/ estoque baixo`:"Estoque saudável"} IconEl={IPkg} color="text-amber-400" trend={lowStock.length>0?-1:0}/>
+      </div>
+      <Card>
+        <h2 className="font-semibold text-white mb-4">Fluxo de Caixa — 6 meses</h2>
+        <ResponsiveContainer width="100%" height={180}>
+          <AreaChart data={cashFlow} margin={{top:5,right:5,bottom:0,left:-20}}>
+            <defs>
+              <linearGradient id="gR" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#3b82f6" stopOpacity={0.35}/><stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/></linearGradient>
+              <linearGradient id="gL" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#10b981" stopOpacity={0.35}/><stop offset="95%" stopColor="#10b981" stopOpacity={0}/></linearGradient>
+            </defs>
+            <CartesianGrid strokeDasharray="3 3" stroke="#374151" vertical={false}/>
+            <XAxis dataKey="mes" tick={{fill:"#9ca3af",fontSize:11}} axisLine={false} tickLine={false}/>
+            <YAxis tick={{fill:"#9ca3af",fontSize:10}} axisLine={false} tickLine={false} tickFormatter={v=>v>=1000?`${(v/1000).toFixed(0)}k`:v}/>
+            <Tooltip contentStyle={{background:"#1f2937",border:"1px solid #374151",borderRadius:12,color:"#fff",fontSize:12}} formatter={(v,n)=>[fmt(v),n==="receita"?"Receita":"Lucro"]}/>
+            <Area type="monotone" dataKey="receita" stroke="#3b82f6" strokeWidth={2} fill="url(#gR)"/>
+            <Area type="monotone" dataKey="lucro" stroke="#10b981" strokeWidth={2} fill="url(#gL)"/>
+          </AreaChart>
+        </ResponsiveContainer>
+        <div className="flex gap-4 mt-1">
+          {[{c:"#3b82f6",l:"Receita"},{c:"#10b981",l:"Lucro"}].map(x=>(
+            <span key={x.l} className="flex items-center gap-1.5 text-xs text-gray-400">
+              <span className="w-2.5 h-2.5 rounded-full" style={{background:x.c}}></span>{x.l}
+            </span>
+          ))}
+        </div>
+      </Card>
+      {topProds.length>0&&(
+        <Card>
+          <h2 className="font-semibold text-white mb-4">Top Produtos</h2>
+          <div className="space-y-3">
+            {topProds.map((p,i)=>(
+              <div key={p.id} className="flex items-center gap-3">
+                <span className="text-gray-500 text-xs w-4 text-center">{i+1}</span>
+                {p.product&&<ProductThumb product={p.product} size={36}/>}
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm text-white truncate">{p.name}</p>
+                  <p className="text-xs text-gray-400">{p.qty} und · {fmt(p.rev)}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </Card>
+      )}
+      {lowStock.length>0&&(
+        <Card className="border-amber-800/40 bg-amber-900/10">
+          <div className="flex items-center gap-2 mb-3">
+            <span className="text-amber-400"><IWarn s={15}/></span>
+            <h2 className="font-semibold text-white text-sm">Estoque Baixo</h2>
+          </div>
+          <div className="space-y-2">
+            {lowStock.map(p=>{
+              const inv=inventory[p.id]||{};
+              const lowSizes=p.sizes.filter(sz=>(inv[sz]||0)<3);
+              return(
+                <div key={p.id} className="flex items-center gap-3">
+                  <ProductThumb product={p} size={36}/>
+                  <div>
+                    <p className="text-sm text-white">{p.name} {p.color}</p>
+                    <p className="text-xs text-amber-400">{lowSizes.map(sz=>`${sz}(${inv[sz]||0})`).join(", ")}</p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </Card>
+      )}
+      <div className="grid grid-cols-3 gap-3">
+        {[{l:"Receita",v:revenue,c:"text-blue-400"},{l:"Custo Merc.",v:cogs,c:"text-orange-400"},{l:"Despesas Op.",v:monthExp,c:"text-red-400"}].map(x=>(
+          <Card key={x.l} className="text-center p-3">
+            <p className="text-xs text-gray-400 mb-1 leading-tight">{x.l}</p>
+            <p className={`text-sm font-bold ${x.c}`}>{fmt(x.v)}</p>
+          </Card>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ── ESTOQUE ───────────────────────────────────────────────────────────────────
+function Estoque({inventory,setInventory,products}){
+  const PRODUCTS=products;
+  const [editing,setEditing]=useState(null);
+  const [tempVal,setTempVal]=useState({});
+  const [search,setSearch]=useState("");
+  const filtered=PRODUCTS.filter(p=>`${p.name} ${p.color} ${p.code}`.toLowerCase().includes(search.toLowerCase()));
+  const startEdit=pid=>{const p=PRODUCTS.find(x=>x.id===pid);const inv=inventory[pid]||{};const t={};p.sizes.forEach(sz=>t[sz]=inv[sz]||0);setTempVal(t);setEditing(pid);};
+  const saveEdit=()=>{setInventory({...inventory,[editing]:{...tempVal}});setEditing(null);};
+  const adjust=(pid,sz,delta)=>{const inv=inventory[pid]||{};setInventory({...inventory,[pid]:{...inv,[sz]:Math.max(0,(inv[sz]||0)+delta)}});};
+  const status=pid=>{const p=PRODUCTS.find(x=>x.id===pid),inv=inventory[pid]||{};const total=p.sizes.reduce((a,sz)=>a+(inv[sz]||0),0);if(total===0)return{label:"Sem estoque",color:"red"};if(p.sizes.some(sz=>(inv[sz]||0)<3))return{label:"Baixo",color:"yellow"};return{label:"OK",color:"green"};};
+  return(
+    <div className="space-y-5 fade-in">
+      <div>
+        <h1 className="text-2xl font-bold text-white">Estoque</h1>
+        <p className="text-gray-400 text-sm mt-1">Gerencie quantidades por produto e tamanho</p>
+      </div>
+      <div className="flex items-center gap-2 bg-gray-800 border border-gray-700 rounded-xl px-3 py-2">
+        <span className="text-gray-400"><ISearch s={14}/></span>
+        <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Buscar produto..." className="bg-transparent text-sm text-white placeholder-gray-500 outline-none flex-1"/>
+      </div>
+      <div className="space-y-3">
+        {filtered.map(product=>{
+          const inv=inventory[product.id]||{};
+          const st=status(product.id);
+          const total=product.sizes.reduce((a,sz)=>a+(inv[sz]||0),0);
+          const isEd=editing===product.id;
+          return(
+            <Card key={product.id}>
+              <div className="flex items-start gap-3">
+                <ProductThumb product={product} size={52}/>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap mb-0.5">
+                    <p className="font-semibold text-white text-sm">{product.name} — {product.color}</p>
+                    <Badge color={st.color}>{st.label}</Badge>
+                  </div>
+                  <p className="text-xs text-gray-400 mb-3">{product.material} · {fmt(product.price)}</p>
+                  <div className="flex flex-wrap gap-3">
+                    {product.sizes.map(sz=>(
+                      <div key={sz} className="flex flex-col items-center gap-1">
+                        <span className="text-xs text-gray-400 font-medium">{sz}</span>
+                        {isEd?(
+                          <input type="number" min="0" value={tempVal[sz]||0} onChange={e=>setTempVal({...tempVal,[sz]:parseInt(e.target.value)||0})} className="w-12 text-center bg-gray-700 border border-blue-500 rounded-lg text-white text-sm p-1 outline-none"/>
+                        ):(
+                          <div className="flex items-center gap-1">
+                            <button onClick={()=>adjust(product.id,sz,-1)} className="w-6 h-6 rounded-lg bg-gray-700 text-gray-300 hover:bg-gray-600 flex items-center justify-center active:scale-95"><IMinus s={10}/></button>
+                            <span className={`w-8 text-center text-sm font-bold ${(inv[sz]||0)<3?"text-amber-400":"text-white"}`}>{inv[sz]||0}</span>
+                            <button onClick={()=>adjust(product.id,sz,1)} className="w-6 h-6 rounded-lg bg-gray-700 text-gray-300 hover:bg-gray-600 flex items-center justify-center active:scale-95"><IPlus s={10}/></button>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                    <div className="flex flex-col items-center gap-1"><span className="text-xs text-gray-500">Total</span><span className="text-sm font-bold text-blue-400">{total}</span></div>
+                  </div>
+                </div>
+                <div className="flex flex-col gap-2 flex-shrink-0">
+                  {isEd?(
+                    <><button onClick={saveEdit} className="flex items-center gap-1.5 text-xs bg-blue-600 hover:bg-blue-700 text-white rounded-xl px-3 py-1.5 font-medium active:scale-95"><ISave s={11}/> Salvar</button>
+                    <button onClick={()=>setEditing(null)} className="text-xs text-gray-400 hover:text-white py-1 text-center">Cancelar</button></>
+                  ):(
+                    <button onClick={()=>startEdit(product.id)} className="flex items-center gap-1.5 text-xs bg-gray-700 hover:bg-gray-600 text-gray-300 rounded-xl px-3 py-1.5 active:scale-95"><IEdit s={11}/> Editar</button>
+                  )}
+                </div>
+              </div>
+            </Card>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// ── PRODUTOS (Cadastro) ───────────────────────────────────────────────────────
+function Produtos({products,setProducts}){
+  const [form,setForm]=useState({id:"",code:"",name:"",color:"",category:"Camisa",colorHex:"#1a1a2e",price:"",cost:"",sizes:["P","M","G","GG"],material:"",active:true});
+  const [editing,setEditing]=useState(null);
+  const [showForm,setShowForm]=useState(false);
+  const ALL_SIZES=["PP","P","M","G","GG","XGG"];
+  const reset=()=>{setForm({id:"",code:"",name:"",color:"",category:"Camisa",colorHex:"#1a1a2e",price:"",cost:"",sizes:["P","M","G","GG"],material:"",active:true});setEditing(null);setShowForm(false);};
+  const startEdit=p=>{setForm({...p,price:p.price.toString(),cost:p.cost.toString()});setEditing(p.id);setShowForm(true);};
+  const save=()=>{
+    if(!form.name.trim()||!form.color.trim()||!form.price)return alert("Preencha nome, cor e preço.");
+    const p={...form,price:parseFloat(form.price),cost:parseFloat(form.cost||0),id:editing||`P${Date.now()}`,code:form.code||form.id||`P${Date.now()}`};
+    if(editing){setProducts(prev=>prev.map(x=>x.id===editing?p:x));}else{setProducts(prev=>[...prev,p]);}
+    reset();
+  };
+  const toggle=id=>setProducts(prev=>prev.map(p=>p.id===id?{...p,active:!p.active}:p));
+  const remove=id=>{if(confirm("Remover produto?"))setProducts(prev=>prev.filter(p=>p.id!==id));};
+  const toggleSize=sz=>setForm(f=>({...f,sizes:f.sizes.includes(sz)?f.sizes.filter(s=>s!==sz):[...f.sizes,sz]}));
+
+  return(
+    <div className="space-y-5 fade-in">
+      <div className="flex items-center justify-between gap-3 flex-wrap">
+        <div><h1 className="text-2xl font-bold text-white">Produtos</h1><p className="text-gray-400 text-sm mt-1">{products.length} produto{products.length!==1?"s":""} cadastrado{products.length!==1?"s":""}</p></div>
+        <button onClick={()=>{reset();setShowForm(true);}} className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl px-4 py-2 text-sm font-semibold active:scale-95 transition-all"><IPlus s={14}/> Novo Produto</button>
+      </div>
+
+      {showForm&&(
+        <Card className="border-blue-800/50 bg-blue-900/10">
+          <h2 className="font-semibold text-white mb-4 text-sm uppercase tracking-widest text-gray-400">{editing?"Editar":"Novo"} Produto</h2>
+          <div className="space-y-3">
+            <div className="grid grid-cols-2 gap-2">
+              <div><label className="text-xs text-gray-400 block mb-1">Código</label><input value={form.code} onChange={e=>setForm(f=>({...f,code:e.target.value}))} className="w-full bg-gray-700 border border-gray-600 rounded-xl text-white text-sm p-2.5 outline-none focus:border-blue-500" placeholder="Ex: MBL18"/></div>
+              <div><label className="text-xs text-gray-400 block mb-1">Categoria</label><select value={form.category} onChange={e=>setForm(f=>({...f,category:e.target.value}))} className="w-full bg-gray-700 border border-gray-600 rounded-xl text-white text-sm p-2.5 outline-none focus:border-blue-500"><option>Camisa</option><option>Bermuda</option><option>Shorts</option><option>Legging</option><option>Outro</option></select></div>
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <div><label className="text-xs text-gray-400 block mb-1">Nome *</label><input value={form.name} onChange={e=>setForm(f=>({...f,name:e.target.value}))} className="w-full bg-gray-700 border border-gray-600 rounded-xl text-white text-sm p-2.5 outline-none focus:border-blue-500" placeholder="Nome do produto"/></div>
+              <div><label className="text-xs text-gray-400 block mb-1">Cor *</label><input value={form.color} onChange={e=>setForm(f=>({...f,color:e.target.value}))} className="w-full bg-gray-700 border border-gray-600 rounded-xl text-white text-sm p-2.5 outline-none focus:border-blue-500" placeholder="Ex: Preto"/></div>
+            </div>
+            <div className="grid grid-cols-3 gap-2">
+              <div><label className="text-xs text-gray-400 block mb-1">Preço *</label><input type="number" value={form.price} onChange={e=>setForm(f=>({...f,price:e.target.value}))} className="w-full bg-gray-700 border border-gray-600 rounded-xl text-white text-sm p-2.5 outline-none focus:border-blue-500" placeholder="0.00"/></div>
+              <div><label className="text-xs text-gray-400 block mb-1">Custo</label><input type="number" value={form.cost} onChange={e=>setForm(f=>({...f,cost:e.target.value}))} className="w-full bg-gray-700 border border-gray-600 rounded-xl text-white text-sm p-2.5 outline-none focus:border-blue-500" placeholder="0.00"/></div>
+              <div><label className="text-xs text-gray-400 block mb-1">Cor (HEX)</label><input type="color" value={form.colorHex} onChange={e=>setForm(f=>({...f,colorHex:e.target.value}))} className="w-full h-10 bg-gray-700 border border-gray-600 rounded-xl cursor-pointer"/></div>
+            </div>
+            <div><label className="text-xs text-gray-400 block mb-1">Material</label><input value={form.material} onChange={e=>setForm(f=>({...f,material:e.target.value}))} className="w-full bg-gray-700 border border-gray-600 rounded-xl text-white text-sm p-2.5 outline-none focus:border-blue-500" placeholder="Ex: 96% Poliamida · 4% Elastano"/></div>
+            <div>
+              <label className="text-xs text-gray-400 block mb-2">Tamanhos disponíveis</label>
+              <div className="flex gap-2 flex-wrap">
+                {ALL_SIZES.map(sz=>(
+                  <button key={sz} onClick={()=>toggleSize(sz)} className={`w-12 h-9 rounded-xl text-sm font-bold border transition-all active:scale-95 ${form.sizes.includes(sz)?"border-blue-500 bg-blue-900/30 text-blue-400":"border-gray-600 text-gray-500 hover:border-gray-500"}`}>{sz}</button>
+                ))}
+              </div>
+            </div>
+            <div className="flex gap-2 pt-1">
+              <button onClick={save} className="flex-1 bg-blue-600 hover:bg-blue-700 text-white rounded-xl py-2.5 text-sm font-semibold flex items-center justify-center gap-2 active:scale-[0.98]"><ISave s={14}/> {editing?"Salvar":"Cadastrar"}</button>
+              <button onClick={reset} className="px-4 py-2.5 text-sm text-gray-400 hover:text-white border border-gray-700 rounded-xl hover:border-gray-500 transition-all">Cancelar</button>
+            </div>
+          </div>
+        </Card>
+      )}
+
+      <div className="space-y-3">
+        {products.map(product=>(
+          <Card key={product.id} className={!product.active?"opacity-50":""}>
+            <div className="flex items-center gap-3">
+              <ProductThumb product={product} size={52}/>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 flex-wrap mb-0.5">
+                  <p className="font-semibold text-white text-sm">{product.name} — {product.color}</p>
+                  <Badge color={product.active?"green":"gray"}>{product.active?"Ativo":"Inativo"}</Badge>
+                  <span className="text-xs text-gray-500">{product.code}</span>
+                </div>
+                <p className="text-xs text-gray-400">{product.material}</p>
+                <p className="text-xs text-gray-300 mt-0.5">{fmt(product.price)} · Tamanhos: {product.sizes.join(", ")}</p>
+              </div>
+              <div className="flex flex-col gap-1.5 flex-shrink-0">
+                <button onClick={()=>startEdit(product)} className="flex items-center gap-1 text-xs bg-gray-700 hover:bg-gray-600 text-gray-300 rounded-xl px-2.5 py-1.5 active:scale-95"><IEdit s={11}/> Editar</button>
+                <button onClick={()=>toggle(product.id)} className="flex items-center gap-1 text-xs bg-gray-700 hover:bg-gray-600 text-gray-300 rounded-xl px-2.5 py-1.5 active:scale-95">{product.active?"Desativar":"Ativar"}</button>
+                <button onClick={()=>remove(product.id)} className="flex items-center gap-1 text-xs hover:bg-red-900/30 text-gray-500 hover:text-red-400 rounded-xl px-2.5 py-1.5 active:scale-95"><ITrash s={11}/></button>
+              </div>
+            </div>
+          </Card>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ── NOVA VENDA ────────────────────────────────────────────────────────────────
+function NovaVenda({inventory,setInventory,customers,setCustomers,setSales,products}){
+  const PRODUCTS=products;
+  const [productId,setProductId]=useState("");
+  const [size,setSize]=useState("");
+  const [qty,setQty]=useState(1);
+  const [discount,setDiscount]=useState(0);
+  const [discountType,setDiscountType]=useState("percent");
+  const [custMode,setCustMode]=useState("none");
+  const [custId,setCustId]=useState("");
+  const [newCustName,setNewCustName]=useState("");
+  const [newCustPhone,setNewCustPhone]=useState("");
+  const [payMethod,setPayMethod]=useState("pix");
+  const [success,setSuccess]=useState(false);
+  const [error,setError]=useState("");
+  const product=PRODUCTS.find(p=>p.id===productId);
+  const stock=product?(inventory[productId]||{})[size]||0:0;
+  const baseTotal=product?product.price*qty:0;
+  const discountAmt=discountType==="percent"?baseTotal*(discount/100):Math.min(discount,baseTotal);
+  const total=Math.max(0,baseTotal-discountAmt);
+  const cost=product?product.cost*qty:0;
+  const reset=()=>{setProductId("");setSize("");setQty(1);setDiscount(0);setCustId("");setNewCustName("");setNewCustPhone("");setSuccess(false);setError("");};
+  const register=()=>{
+    if(!productId)return setError("Selecione um produto.");
+    if(!size)return setError("Selecione um tamanho.");
+    if(qty<1)return setError("Quantidade inválida.");
+    if(qty>stock)return setError(`Estoque insuficiente. Disponível: ${stock}`);
+    let cid=custId,updatedCust=[...customers];
+    if(custMode==="new"){if(!newCustName.trim())return setError("Informe o nome do cliente.");const nc={id:`C${Date.now()}`,name:newCustName.trim(),phone:newCustPhone.trim(),createdAt:today()};updatedCust=[...customers,nc];setCustomers(updatedCust);cid=nc.id;}
+    const sale={id:`V${Date.now()}`,date:today(),productId,size,quantity:qty,price:product.price,discount:discountAmt,total,cost,customerId:cid||null,customerName:cid?(updatedCust.find(c=>c.id===cid)||{}).name||"—":"Sem cadastro",payMethod,product:`${product.name} ${product.color}`};
+    setSales(prev=>[sale,...prev]);
+    const inv=inventory[productId]||{};
+    setInventory({...inventory,[productId]:{...inv,[size]:stock-qty}});
+    setError("");setSuccess(true);setTimeout(reset,2500);
+  };
+  if(success)return(
+    <div className="flex flex-col items-center justify-center h-72 gap-4 fade-in">
+      <div className="w-16 h-16 rounded-full bg-emerald-900/50 border-2 border-emerald-500 flex items-center justify-center text-emerald-400"><ICheck s={32}/></div>
+      <p className="text-xl font-bold text-white">Venda Registrada!</p>
+      <p className="text-gray-400 text-center">{fmt(total)}<br/>{product?.name} {product?.color} — {size}</p>
+    </div>
+  );
+  return(
+    <div className="space-y-5 fade-in max-w-lg">
+      <div><h1 className="text-2xl font-bold text-white">Nova Venda</h1><p className="text-gray-400 text-sm mt-1">Preencha os dados da venda</p></div>
+      {error&&<div className="flex items-center gap-2 bg-red-900/30 border border-red-800 rounded-xl p-3 text-red-400 text-sm"><IWarn s={14}/>{error}</div>}
+      <Card>
+        <h2 className="font-semibold text-white mb-3 text-sm uppercase tracking-widest text-gray-400">Produto</h2>
+        <div className="space-y-2">
+          {PRODUCTS.filter(p=>p.active!==false).map(p=>(
+            <button key={p.id} onClick={()=>{setProductId(p.id);setSize("");}} className={`w-full flex items-center gap-3 p-3 rounded-xl border text-left transition-all active:scale-[0.98] ${productId===p.id?"border-blue-500 bg-blue-900/20":"border-gray-700 hover:border-gray-600"}`}>
+              <ProductThumb product={p} size={40}/>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-white">{p.name} — {p.color}</p>
+                <p className="text-xs text-gray-400">{p.code} · {fmt(p.price)}</p>
+              </div>
+            </button>
+          ))}
+        </div>
+      </Card>
+      {product&&(
+        <Card>
+          <h2 className="font-semibold text-white mb-3 text-sm uppercase tracking-widest text-gray-400">Tamanho & Quantidade</h2>
+          <div className="flex gap-2 flex-wrap mb-4">
+            {product.sizes.map(sz=>{const st=(inventory[productId]||{})[sz]||0;return(
+              <button key={sz} onClick={()=>setSize(sz)} disabled={st===0} className={`px-4 py-2 rounded-xl text-sm font-bold border transition-all active:scale-95 ${size===sz?"border-blue-500 bg-blue-900/20 text-blue-400":st===0?"border-gray-800 text-gray-600 cursor-not-allowed":"border-gray-700 text-gray-300 hover:border-gray-500"}`}>
+                {sz}<span className="block text-xs opacity-60">{st} un</span>
+              </button>
+            );})}
+          </div>
+          <div className="flex items-center gap-3">
+            <label className="text-xs text-gray-400 uppercase tracking-widest whitespace-nowrap">Qtd.</label>
+            <div className="flex items-center gap-2">
+              <button onClick={()=>setQty(q=>Math.max(1,q-1))} className="w-8 h-8 bg-gray-700 rounded-xl flex items-center justify-center hover:bg-gray-600 active:scale-90"><IMinus s={12}/></button>
+              <span className="text-white font-bold w-6 text-center">{qty}</span>
+              <button onClick={()=>setQty(q=>Math.min(stock,q+1))} className="w-8 h-8 bg-gray-700 rounded-xl flex items-center justify-center hover:bg-gray-600 active:scale-90"><IPlus s={12}/></button>
+            </div>
+            {size&&<span className="text-xs text-gray-500">{stock} disponíveis</span>}
+          </div>
+        </Card>
+      )}
+      {product&&(
+        <Card>
+          <h2 className="font-semibold text-white mb-3 text-sm uppercase tracking-widest text-gray-400">Desconto</h2>
+          <div className="flex items-center gap-2">
+            <div className="flex gap-1">
+              {["percent","value"].map(t=><button key={t} onClick={()=>setDiscountType(t)} className={`px-3 py-1.5 rounded-xl text-sm border transition-all ${discountType===t?"border-blue-500 bg-blue-900/20 text-blue-400":"border-gray-700 text-gray-400"}`}>{t==="percent"?"%":"R$"}</button>)}
+            </div>
+            <input type="number" min="0" value={discount} onChange={e=>setDiscount(parseFloat(e.target.value)||0)} className="flex-1 bg-gray-700 border border-gray-600 rounded-xl text-white text-sm p-2 text-center outline-none focus:border-blue-500"/>
+          </div>
+        </Card>
+      )}
+      <Card>
+        <h2 className="font-semibold text-white mb-3 text-sm uppercase tracking-widest text-gray-400">Cliente</h2>
+        <div className="flex gap-2 mb-3">
+          {["none","existing","new"].map(m=><button key={m} onClick={()=>setCustMode(m)} className={`px-3 py-1.5 text-sm rounded-xl border transition-all active:scale-95 ${custMode===m?"border-blue-500 bg-blue-900/20 text-blue-400":"border-gray-700 text-gray-400 hover:border-gray-600"}`}>{m==="none"?"Sem cadastro":m==="existing"?"Cadastrado":"Novo"}</button>)}
+        </div>
+        {custMode==="existing"&&<select value={custId} onChange={e=>setCustId(e.target.value)} className="w-full bg-gray-700 border border-gray-600 rounded-xl text-white text-sm p-2.5 outline-none focus:border-blue-500"><option value="">— Selecione —</option>{customers.map(c=><option key={c.id} value={c.id}>{c.name}{c.phone?` (${c.phone})`:""}</option>)}</select>}
+        {custMode==="new"&&<div className="grid grid-cols-2 gap-2"><input placeholder="Nome" value={newCustName} onChange={e=>setNewCustName(e.target.value)} className="bg-gray-700 border border-gray-600 rounded-xl text-white text-sm p-2.5 px-3 outline-none focus:border-blue-500 placeholder-gray-500"/><input placeholder="Telefone" value={newCustPhone} onChange={e=>setNewCustPhone(e.target.value)} className="bg-gray-700 border border-gray-600 rounded-xl text-white text-sm p-2.5 px-3 outline-none focus:border-blue-500 placeholder-gray-500"/></div>}
+      </Card>
+      <Card>
+        <h2 className="font-semibold text-white mb-3 text-sm uppercase tracking-widest text-gray-400">Pagamento</h2>
+        <div className="flex flex-wrap gap-2">
+          {["dinheiro","pix","débito","crédito","crediário"].map(m=><button key={m} onClick={()=>setPayMethod(m)} className={`px-3 py-2 rounded-xl text-sm border transition-all capitalize active:scale-95 ${payMethod===m?"border-emerald-500 bg-emerald-900/20 text-emerald-400":"border-gray-700 text-gray-400 hover:border-gray-600"}`}>{m}</button>)}
+        </div>
+      </Card>
+      {product&&(
+        <Card className="border-blue-800/50 bg-blue-900/10">
+          <div className="flex justify-between mb-3"><h2 className="font-semibold text-white">Resumo</h2><Badge color={PAY_COLORS[payMethod]||"gray"}>{payMethod}</Badge></div>
+          <div className="space-y-1.5 text-sm mb-4">
+            <div className="flex justify-between"><span className="text-gray-400">Produto</span><span className="text-white text-right">{product.name} {product.color} — {size||"?"} x{qty}</span></div>
+            <div className="flex justify-between"><span className="text-gray-400">Subtotal</span><span className="text-white">{fmt(baseTotal)}</span></div>
+            {discountAmt>0&&<div className="flex justify-between"><span className="text-purple-400">Desconto</span><span className="text-purple-400">- {fmt(discountAmt)}</span></div>}
+            <div className="flex justify-between pt-2 border-t border-gray-700"><span className="font-bold text-white">Total</span><span className="text-xl font-bold text-blue-400">{fmt(total)}</span></div>
+          </div>
+          <button onClick={register} className="w-full bg-blue-600 hover:bg-blue-700 active:scale-[0.98] text-white font-semibold rounded-xl py-3 transition-all flex items-center justify-center gap-2"><ICart s={16}/> Registrar Venda</button>
+        </Card>
+      )}
+    </div>
+  );
+}
+
+// ── HISTÓRICO ─────────────────────────────────────────────────────────────────
+function Historico({sales,setSales}){
+  const [search,setSearch]=useState("");
+  const [filterMonth,setFilterMonth]=useState("");
+  const filtered=sales.filter(s=>{const ms=`${s.product} ${s.customerName} ${s.id}`.toLowerCase().includes(search.toLowerCase());const mm=!filterMonth||s.date.startsWith(filterMonth);return ms&&mm;});
+  const totalRev=filtered.reduce((a,s)=>a+s.total,0);
+  const months=[...new Set(sales.map(s=>s.date.substring(0,7)))].sort().reverse();
+  return(
+    <div className="space-y-5 fade-in">
+      <div><h1 className="text-2xl font-bold text-white">Histórico</h1><p className="text-gray-400 text-sm mt-1">{filtered.length} venda{filtered.length!==1?"s":""} · {fmt(totalRev)}</p></div>
+      <div className="flex gap-2">
+        <div className="flex items-center gap-2 bg-gray-800 border border-gray-700 rounded-xl px-3 py-2 flex-1"><span className="text-gray-400"><ISearch s={14}/></span><input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Buscar..." className="bg-transparent text-sm text-white placeholder-gray-500 outline-none flex-1 min-w-0"/></div>
+        <select value={filterMonth} onChange={e=>setFilterMonth(e.target.value)} className="bg-gray-800 border border-gray-700 rounded-xl text-gray-300 text-sm px-2 py-2 outline-none max-w-[110px]"><option value="">Todos</option>{months.map(m=><option key={m} value={m}>{MONTHS[parseInt(m.split("-")[1])-1]}/{m.split("-")[0]}</option>)}</select>
+      </div>
+      {filtered.length===0?(<Card className="text-center py-12"><div className="text-gray-600 mx-auto mb-3 flex justify-center"><IList s={40}/></div><p className="text-gray-400">Nenhuma venda encontrada</p></Card>):(
+        <div className="space-y-2">
+          {filtered.map(s=>(
+            <Card key={s.id} className="hover:border-gray-600 transition-all">
+              <div className="flex items-center gap-3">
+                <div className="text-center min-w-[40px]"><p className="text-base font-bold text-white">{new Date(s.date+"T12:00").getDate()}</p><p className="text-xs text-gray-400">{MONTHS[new Date(s.date+"T12:00").getMonth()]}</p></div>
+                <div className="w-px h-8 bg-gray-700 flex-shrink-0"/>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-1.5 flex-wrap"><p className="font-medium text-white text-sm truncate">{s.product}</p><Badge color="gray">{s.size} x{s.quantity}</Badge><Badge color={PAY_COLORS[s.payMethod]||"gray"}>{s.payMethod}</Badge></div>
+                  <p className="text-xs text-gray-400 mt-0.5 truncate">{s.customerName}</p>
+                </div>
+                <div className="text-right flex-shrink-0"><p className="font-bold text-white text-sm">{fmt(s.total)}</p>{s.discount>0&&<p className="text-xs text-purple-400">-{fmt(s.discount)}</p>}</div>
+                <button onClick={()=>setSales(prev=>prev.filter(x=>x.id!==s.id))} className="p-2 rounded-lg hover:bg-red-900/30 text-gray-600 hover:text-red-400 transition-all flex-shrink-0 active:scale-95"><ITrash s={14}/></button>
+              </div>
+            </Card>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── CLIENTES ──────────────────────────────────────────────────────────────────
+function Clientes({customers,sales}){
+  const [search,setSearch]=useState("");
+  const enriched=customers.map(c=>{const cs=sales.filter(s=>s.customerId===c.id);const total=cs.reduce((a,s)=>a+s.total,0);const avg=cs.length>0?total/cs.length:0;return{...c,purchases:cs.length,totalSpent:total,avgTicket:avg};}).filter(c=>c.name.toLowerCase().includes(search.toLowerCase()));
+  const top=[...enriched].sort((a,b)=>b.totalSpent-a.totalSpent)[0];
+  return(
+    <div className="space-y-5 fade-in">
+      <div className="flex items-center justify-between gap-3 flex-wrap">
+        <div><h1 className="text-2xl font-bold text-white">Clientes</h1><p className="text-gray-400 text-sm mt-1">{customers.length} cadastrado{customers.length!==1?"s":""}</p></div>
+        <div className="flex items-center gap-2 bg-gray-800 border border-gray-700 rounded-xl px-3 py-2"><span className="text-gray-400"><ISearch s={14}/></span><input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Buscar..." className="bg-transparent text-sm text-white placeholder-gray-500 outline-none w-32"/></div>
+      </div>
+      {top&&(<Card className="border-blue-800/50 bg-blue-900/10"><p className="text-xs text-blue-400 font-semibold uppercase tracking-widest mb-2">⭐ Melhor cliente</p><div className="flex items-center gap-3"><div className="w-11 h-11 rounded-2xl bg-blue-900/50 border border-blue-700 flex items-center justify-center text-lg font-bold text-blue-300">{top.name[0]}</div><div><p className="font-bold text-white">{top.name}</p><p className="text-xs text-gray-400">{top.purchases} compra{top.purchases!==1?"s":""} · {fmt(top.totalSpent)} · Ticket {fmt(top.avgTicket)}</p></div></div></Card>)}
+      {enriched.length===0?(<Card className="text-center py-12"><div className="text-gray-600 mx-auto mb-3 flex justify-center"><IUsers s={40}/></div><p className="text-gray-400">Nenhum resultado</p></Card>):(
+        <div className="space-y-2">
+          {[...enriched].sort((a,b)=>b.totalSpent-a.totalSpent).map(c=>(
+            <Card key={c.id} className="hover:border-gray-600 transition-all">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-gray-700 flex items-center justify-center font-bold text-white flex-shrink-0">{c.name[0]}</div>
+                <div className="flex-1 min-w-0"><p className="font-medium text-white text-sm">{c.name}</p><p className="text-xs text-gray-400">{c.phone||"Sem telefone"}</p></div>
+                <div className="text-center flex-shrink-0"><p className="text-sm font-bold text-white">{c.purchases}</p><p className="text-xs text-gray-400">compra{c.purchases!==1?"s":""}</p></div>
+                <div className="text-center flex-shrink-0"><p className="text-sm font-bold text-emerald-400">{fmt(c.totalSpent)}</p><p className="text-xs text-gray-400">total</p></div>
+                <div className="text-center flex-shrink-0"><p className="text-sm font-bold text-blue-400">{fmt(c.avgTicket)}</p><p className="text-xs text-gray-400">ticket</p></div>
+              </div>
+            </Card>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── DESPESAS ──────────────────────────────────────────────────────────────────
+function Despesas({expenses,setExpenses}){
+  const [desc,setDesc]=useState("");
+  const [amount,setAmount]=useState("");
+  const [date,setDate]=useState(today());
+  const [category,setCategory]=useState("operacional");
+  const CATS=["operacional","transporte","marketing","fornecedor","aluguel","outros"];
+  const now=new Date(),cm=now.getMonth(),cy=now.getFullYear();
+  const monthExp=expenses.filter(e=>{const d=new Date(e.date+"T12:00");return d.getMonth()===cm&&d.getFullYear()===cy});
+  const totalMonth=monthExp.reduce((a,e)=>a+e.amount,0);
+  const byCat=CATS.map(c=>({cat:c,total:expenses.filter(e=>e.category===c).reduce((a,e)=>a+e.amount,0)})).filter(x=>x.total>0);
+  const maxCat=byCat.length>0?Math.max(...byCat.map(x=>x.total)):1;
+  const add=()=>{if(!desc.trim()||!amount||isNaN(amount))return;setExpenses(prev=>[{id:`E${Date.now()}`,desc:desc.trim(),amount:parseFloat(amount),date,category},...prev]);setDesc("");setAmount("");};
+  return(
+    <div className="space-y-5 fade-in">
+      <div><h1 className="text-2xl font-bold text-white">Despesas</h1><p className="text-gray-400 text-sm mt-1">Registre e controle seus gastos</p></div>
+      <div className="grid grid-cols-2 gap-3">
+        <Metric label="Despesas do Mês" value={fmt(totalMonth)} IconEl={IWallet} color="text-red-400"/>
+        <Metric label="Lançamentos" value={expenses.length} IconEl={IList} color="text-gray-400"/>
+      </div>
+      <Card>
+        <h2 className="font-semibold text-white mb-3 text-sm uppercase tracking-widest text-gray-400">Nova Despesa</h2>
+        <div className="space-y-2">
+          <input placeholder="Descrição" value={desc} onChange={e=>setDesc(e.target.value)} className="w-full bg-gray-700 border border-gray-600 rounded-xl text-white text-sm p-2.5 px-3 outline-none focus:border-blue-500 placeholder-gray-500"/>
+          <div className="grid grid-cols-2 gap-2">
+            <input type="number" placeholder="Valor (R$)" value={amount} onChange={e=>setAmount(e.target.value)} className="bg-gray-700 border border-gray-600 rounded-xl text-white text-sm p-2.5 px-3 outline-none focus:border-blue-500 placeholder-gray-500"/>
+            <input type="date" value={date} onChange={e=>setDate(e.target.value)} className="bg-gray-700 border border-gray-600 rounded-xl text-white text-sm p-2.5 px-3 outline-none focus:border-blue-500"/>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {CATS.map(c=><button key={c} onClick={()=>setCategory(c)} className={`px-3 py-1.5 rounded-xl text-xs border capitalize transition-all active:scale-95 ${category===c?"border-blue-500 bg-blue-900/20 text-blue-400":"border-gray-700 text-gray-400 hover:border-gray-600"}`}>{c}</button>)}
+          </div>
+          <button onClick={add} className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl py-2.5 flex items-center justify-center gap-2 transition-all active:scale-[0.98]"><IPlus s={16}/> Adicionar</button>
+        </div>
+      </Card>
+      {byCat.length>0&&(<Card><h2 className="font-semibold text-white mb-3">Por Categoria</h2><div className="space-y-2.5">{[...byCat].sort((a,b)=>b.total-a.total).map(x=>(<div key={x.cat} className="flex items-center gap-3"><Badge color={CAT_COLORS[x.cat]||"gray"}>{x.cat}</Badge><div className="flex-1 bg-gray-700 rounded-full h-1.5"><div className="h-1.5 rounded-full bg-blue-500 transition-all" style={{width:`${(x.total/maxCat)*100}%`}}/></div><span className="text-sm text-white font-medium min-w-[70px] text-right">{fmt(x.total)}</span></div>))}</div></Card>)}
+      <div className="space-y-2">
+        {expenses.length===0?(<Card className="text-center py-12"><div className="text-gray-600 mx-auto mb-3 flex justify-center"><IWallet s={40}/></div><p className="text-gray-400">Nenhuma despesa registrada</p></Card>):expenses.map(e=>(
+          <Card key={e.id} className="hover:border-gray-600 transition-all">
+            <div className="flex items-center gap-3">
+              <div className="text-center min-w-[38px]"><p className="text-sm font-bold text-white">{new Date(e.date+"T12:00").getDate()}</p><p className="text-xs text-gray-400">{MONTHS[new Date(e.date+"T12:00").getMonth()]}</p></div>
+              <div className="w-px h-8 bg-gray-700 flex-shrink-0"/>
+              <div className="flex-1 min-w-0"><p className="text-sm font-medium text-white truncate">{e.desc}</p><Badge color={CAT_COLORS[e.category]||"gray"}>{e.category}</Badge></div>
+              <p className="font-bold text-red-400 text-sm flex-shrink-0">{fmt(e.amount)}</p>
+              <button onClick={()=>setExpenses(prev=>prev.filter(x=>x.id!==e.id))} className="p-2 rounded-lg hover:bg-red-900/30 text-gray-600 hover:text-red-400 transition-all flex-shrink-0 active:scale-95"><ITrash s={14}/></button>
+            </div>
+          </Card>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ── APP ────────────────────────────────────────────────────────────────────────
+function App(){
+  const [page,setPage]=useState("dashboard");
+  const [products,setProducts]=useState(()=>lload("s24_products",DEFAULT_PRODUCTS));
+  const [inventory,setInventory]=useState(()=>lload("s24_inv",{}));
+  const [sales,setSales]=useState(()=>lload("s24_sales",[]));
+  const [customers,setCustomers]=useState(()=>lload("s24_cust",[]));
+  const [expenses,setExpenses]=useState(()=>lload("s24_exp",[]));
+  const [sidebarOpen,setSidebarOpen]=useState(false);
+  const [syncStatus,setSyncStatus]=useState("idle");
+  const [lastSync,setLastSync]=useState("");
+  const syncTimerRef=useRef(null);
+
+  // ── Auto-save to localStorage whenever state changes ────────────────────────
+  useEffect(()=>lload("s24_auth")==="1"||lsave("s24_products",products),[products]);
+  useEffect(()=>lsave("s24_inv",inventory),[inventory]);
+  useEffect(()=>lsave("s24_sales",sales),[sales]);
+  useEffect(()=>lsave("s24_cust",customers),[customers]);
+  useEffect(()=>lsave("s24_exp",expenses),[expenses]);
+  lsave("s24_products",products);
+
+  // ── Cloud sync: push on change, debounced ─────────────────────────────────
+  const pushToCloud=useCallback(async()=>{
+    setSyncStatus("syncing");
+    try {
+      const results = await Promise.all([
+        cloudSet("s24_products",products),
+        cloudSet("s24_inv",inventory),
+        cloudSet("s24_sales",sales),
+        cloudSet("s24_cust",customers),
+        cloudSet("s24_exp",expenses),
+      ]);
+      const ok=results.every(Boolean);
+      setSyncStatus(ok?"idle":"error");
+      if(ok){const now=new Date();setLastSync(`${now.getHours()}:${String(now.getMinutes()).padStart(2,"0")}`);}
+    } catch(_){setSyncStatus("error");}
+  },[products,inventory,sales,customers,expenses]);
+
+  // Debounce sync on data change
+  useEffect(()=>{
+    if(syncTimerRef.current)clearTimeout(syncTimerRef.current);
+    syncTimerRef.current=setTimeout(pushToCloud,3000);
+    return ()=>clearTimeout(syncTimerRef.current);
+  },[products,inventory,sales,customers,expenses]);
+
+  // ── Pull from cloud on load ────────────────────────────────────────────────
+  useEffect(()=>{
+    (async()=>{
+      setSyncStatus("syncing");
+      try{
+        const [p,inv,s,c,e]=await Promise.all([
+          cloudGet("s24_products"),cloudGet("s24_inv"),cloudGet("s24_sales"),cloudGet("s24_cust"),cloudGet("s24_exp")
+        ]);
+        if(p)setProducts(p);
+        if(inv)setInventory(inv);
+        if(s)setSales(s);
+        if(c)setCustomers(c);
+        if(e)setExpenses(e);
+        setSyncStatus("idle");
+        const now=new Date();setLastSync(`${now.getHours()}:${String(now.getMinutes()).padStart(2,"0")}`);
+      }catch(_){setSyncStatus("error");}
+    })();
+  },[]);
+
+  const setInv=v=>setInventory(typeof v==="function"?v(inventory):v);
+  const setSalesF=v=>setSales(typeof v==="function"?v(sales):v);
+  const setCustF=v=>setCustomers(typeof v==="function"?v(customers):v);
+  const setExpF=v=>setExpenses(typeof v==="function"?v(expenses):v);
+  const setProd=v=>setProducts(typeof v==="function"?v(products):v);
+
+  const NAV=[
+    {id:"dashboard",label:"Dashboard",Ic:IBar},
+    {id:"produtos",label:"Produtos",Ic:IPackage},
+    {id:"estoque",label:"Estoque",Ic:IPkg},
+    {id:"venda",label:"Nova Venda",Ic:ICart},
+    {id:"historico",label:"Histórico",Ic:IList},
+    {id:"clientes",label:"Clientes",Ic:IUsers},
+    {id:"despesas",label:"Despesas",Ic:IWallet},
+  ];
+
+  const lowStockCount=products.filter(p=>{const inv=inventory[p.id]||{};return p.sizes.some(sz=>(inv[sz]||0)<3);}).length;
+  const props={inventory,setInventory:setInv,sales,setSales:setSalesF,customers,setCustomers:setCustF,expenses,setExpenses:setExpF,products,setProducts:setProd};
+  const goPage=id=>{setPage(id);setSidebarOpen(false);window.scrollTo(0,0);};
+
+  const renderPage=()=>{
+    switch(page){
+      case"dashboard":return<Dashboard {...props}/>;
+      case"produtos":return<Produtos products={products} setProducts={setProd}/>;
+      case"estoque":return<Estoque inventory={inventory} setInventory={setInv} products={products}/>;
+      case"venda":return<NovaVenda {...props}/>;
+      case"historico":return<Historico sales={sales} setSales={setSalesF}/>;
+      case"clientes":return<Clientes customers={customers} sales={sales}/>;
+      case"despesas":return<Despesas expenses={expenses} setExpenses={setExpF}/>;
+      default:return<Dashboard {...props}/>;
+    }
+  };
+
+  const logout=()=>{sessionStorage.removeItem("s24_auth");location.reload();};
+  const currentLabel=NAV.find(n=>n.id===page)?.label||"";
+
+  return(
+    <div className="min-h-screen bg-gray-900 text-white">
+      {sidebarOpen&&<div className="fixed inset-0 bg-black/60 z-20 lg:hidden" onClick={()=>setSidebarOpen(false)}/>}
+      <div className="flex h-screen overflow-hidden">
+        {/* Sidebar */}
+        <aside className={`sidebar-transition fixed lg:relative z-30 h-full w-60 bg-gray-900 border-r border-gray-800 flex flex-col flex-shrink-0 ${sidebarOpen?"translate-x-0":"-translate-x-full lg:translate-x-0"}`}>
+          <div className="p-5 border-b border-gray-800 flex-shrink-0">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center text-xl flex-shrink-0">👕</div>
+              <div className="min-w-0"><p className="font-bold text-white text-sm">Studio 24</p><p className="text-xs text-gray-400 truncate">Gestão de Negócio</p></div>
+            </div>
+            <SyncStatus status={syncStatus} lastSync={lastSync} onSync={pushToCloud}/>
+          </div>
+          <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
+            {NAV.map(n=>{
+              const active=page===n.id;
+              return(
+                <button key={n.id} onClick={()=>goPage(n.id)} className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all active:scale-[0.97] ${active?"bg-blue-600 text-white":"text-gray-400 hover:bg-gray-800 hover:text-white"}`}>
+                  <n.Ic s={16}/>{n.label}
+                  {n.id==="estoque"&&lowStockCount>0&&<span className="ml-auto w-5 h-5 rounded-full bg-amber-500 text-black text-xs font-bold flex items-center justify-center flex-shrink-0">{lowStockCount}</span>}
+                </button>
+              );
+            })}
+          </nav>
+          <div className="p-4 border-t border-gray-800 flex-shrink-0 space-y-2">
+            <button onClick={logout} className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-sm text-gray-500 hover:text-red-400 hover:bg-red-900/20 transition-all"><ILogout s={14}/> Sair</button>
+            <p className="text-xs text-gray-600 text-center">studio24fitness.com.br</p>
+          </div>
+        </aside>
+        {/* Main */}
+        <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+          <header className="lg:hidden flex items-center justify-between px-4 py-3 border-b border-gray-800 bg-gray-900 flex-shrink-0 z-10">
+            <button onClick={()=>setSidebarOpen(true)} className="p-2 rounded-xl hover:bg-gray-800 text-gray-400 active:scale-95"><IMenu s={20}/></button>
+            <p className="font-bold text-white">{currentLabel}</p>
+            <div className="w-9"/>
+          </header>
+          <main className="flex-1 overflow-y-auto p-4 lg:p-8">
+            <div className="max-w-2xl mx-auto lg:max-w-4xl">{renderPage()}</div>
+          </main>
+        </div>
+      </div>
+      {/* Mobile bottom nav */}
+      <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-gray-900 border-t border-gray-800 flex z-10 pb-safe" style={{paddingBottom:"env(safe-area-inset-bottom)"}}>
+        {NAV.map(n=>{const active=page===n.id;return(
+          <button key={n.id} onClick={()=>goPage(n.id)} className={`flex-1 flex flex-col items-center py-2 gap-0.5 transition-all active:scale-95 relative ${active?"text-blue-400":"text-gray-500"}`}>
+            <n.Ic s={18}/>
+            <span className="text-[9px] font-medium leading-tight">{n.label.split(" ")[0]}</span>
+            {n.id==="estoque"&&lowStockCount>0&&<span className="absolute top-1 right-1/2 translate-x-3 w-3.5 h-3.5 rounded-full bg-amber-500 text-black text-[8px] font-bold flex items-center justify-center">{lowStockCount}</span>}
+          </button>
+        );})}
+      </nav>
+    </div>
+  );
+}
+
+const root=ReactDOM.createRoot(document.getElementById("root"));
+root.render(<App/>);
+</script>
+</body>
+</html>
