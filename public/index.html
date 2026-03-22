@@ -1131,10 +1131,15 @@ async function pushOrderToCloud(newInv,sales,customers){
 }
 
 
-loadInventory();
-renderProducts('all');
-syncFromCloud();
-setInterval(syncFromCloud, 30000);
+// Espera a nuvem antes de renderizar
+(async function init(){
+  await syncFromCloud();
+  if(PRODUCTS.length === 0){
+    loadInventory();
+    renderProducts('all');
+  }
+  setInterval(syncFromCloud, 30000);
+})();
 </script>
 </body>
 </html>
