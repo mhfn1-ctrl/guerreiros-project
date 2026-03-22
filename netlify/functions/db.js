@@ -18,7 +18,7 @@ exports.handler = async (event) => {
       name: "studio24",
       consistency: "strong",
       siteID: process.env.NETLIFY_SITE_ID,
-      token: process.env.NETLIFY_TOKEN,
+      token: process.env.BLOB_TOKEN,
     });
 
     const { httpMethod, queryStringParameters, body } = event;
