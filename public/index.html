@@ -1008,30 +1008,21 @@ function updateCartUI(){
   const count=cart.reduce((a,c)=>a+c.quantity,0);
   // Badge
   const badge=document.getElementById('cartBadge');
-  badge.textContent=count;
-  count>0?badge.classList.add('show'):badge.classList.remove('show');
+  if(badge){badge.textContent=count;count>0?badge.classList.add('show'):badge.classList.remove('show');}
   // Items
   const container=document.getElementById('cart-items');
-  const empty=document.getElementById('cartEmpty');
   const footer=document.getElementById('cartFooter');
+  if(!container)return;
   if(cart.length===0){
-    empty.style.display='flex';footer.style.display='none';
-    container.innerHTML='';container.appendChild(empty);return;
+    container.innerHTML='<div class="cart-empty" id="cartEmpty"><div class="cart-empty-icon">🛍️</div><div class="cart-empty-title">Carrinho vazio</div><p style="font-size:13px;color:var(--muted)">Adicione produtos para continuar</p></div>';
+    if(footer)footer.style.display='none';
+    return;
   }
-  empty.style.display='none';footer.style.display='block';
-  const itemsHTML=cart.map(c=>`
-    <div class="cart-item">
-      <div class="cart-item-thumb" style="background:linear-gradient(135deg,${c.colorHex}cc,${c.colorHex}44)">${c.emoji}</div>
-      <div class="cart-item-info">
-        <div class="cart-item-name">${c.name}</div>
-        <div class="cart-item-detail">Tam. ${c.size} · Qtd. ${c.quantity}</div>
-        <div class="cart-item-price">${fmt(c.price*c.quantity)}</div>
-      </div>
-      <button class="cart-item-remove" onclick="removeFromCart('${c.productId}','${c.size}')">✕</button>
-    </div>
-  `).join('');
+  if(footer)footer.style.display='block';
+  const itemsHTML=cart.map(c=>'<div class="cart-item"><div class="cart-item-thumb" style="background:linear-gradient(135deg,'+c.colorHex+'cc,'+c.colorHex+'44)">'+c.emoji+'</div><div class="cart-item-info"><div class="cart-item-name">'+c.name+'</div><div class="cart-item-detail">Tam. '+c.size+' · Qtd. '+c.quantity+'</div><div class="cart-item-price">'+fmt(c.price*c.quantity)+'</div></div><button class="cart-item-remove" onclick="removeFromCart(''+c.productId+'',''+c.size+'')">✕</button></div>').join('');
   container.innerHTML=itemsHTML;
-  document.getElementById('cartTotal').textContent=fmt(total);
+  const cartTotal=document.getElementById('cartTotal');
+  if(cartTotal)cartTotal.textContent=fmt(total);
 }
 
 function openCart(){document.getElementById('cart-overlay').classList.add('open')}
