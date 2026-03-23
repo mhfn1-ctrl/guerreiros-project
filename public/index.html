@@ -997,8 +997,9 @@ function addToCart(pid){
   if(btn){btn.textContent='✓ Adicionado!';btn.style.background='#22c55e';btn.style.color='#000';setTimeout(()=>renderProducts(currentFilter),1200);}
 }
 
-function removeFromCart(pid,sz){
-  cart=cart.filter(c=>!(c.productId===pid&&c.size===sz));
+function removeFromCart(btn){
+  var pid=btn.getAttribute('data-pid');var sz=btn.getAttribute('data-sz');
+  cart=cart.filter(function(c){return !(c.productId===pid&&c.size===sz);});
   updateCartUI();
   renderProducts(currentFilter);
 }
@@ -1006,24 +1007,35 @@ function removeFromCart(pid,sz){
 function updateCartUI(){
   const total=cart.reduce((a,c)=>a+c.price*c.quantity,0);
   const count=cart.reduce((a,c)=>a+c.quantity,0);
-  // Badge
   const badge=document.getElementById('cartBadge');
   if(badge){badge.textContent=count;count>0?badge.classList.add('show'):badge.classList.remove('show');}
-  // Items
   const container=document.getElementById('cart-items');
   const footer=document.getElementById('cartFooter');
   if(!container)return;
   if(cart.length===0){
-    container.innerHTML='<div class="cart-empty" id="cartEmpty"><div class="cart-empty-icon">🛍️</div><div class="cart-empty-title">Carrinho vazio</div><p style="font-size:13px;color:var(--muted)">Adicione produtos para continuar</p></div>';
+    container.innerHTML='<div class="cart-empty"><div class="cart-empty-icon">&#128717;</div><div class="cart-empty-title">Carrinho vazio</div><p style="font-size:13px;color:var(--muted)">Adicione produtos para continuar</p></div>';
     if(footer)footer.style.display='none';
     return;
   }
   if(footer)footer.style.display='block';
-  const itemsHTML=cart.map(c=>'<div class="cart-item"><div class="cart-item-thumb" style="background:linear-gradient(135deg,'+c.colorHex+'cc,'+c.colorHex+'44)">'+c.emoji+'</div><div class="cart-item-info"><div class="cart-item-name">'+c.name+'</div><div class="cart-item-detail">Tam. '+c.size+' · Qtd. '+c.quantity+'</div><div class="cart-item-price">'+fmt(c.price*c.quantity)+'</div></div><button class="cart-item-remove" onclick="removeFromCart(''+c.productId+'',''+c.size+'')">✕</button></div>').join('');
-  container.innerHTML=itemsHTML;
-  const cartTotal=document.getElementById('cartTotal');
+  var html="";
+  for(var i=0;i<cart.length;i++){
+    var c=cart[i];
+    html+='<div class="cart-item">';
+    html+='<div class="cart-item-thumb" style="background:linear-gradient(135deg,'+c.colorHex+'cc,'+c.colorHex+'44)">'+c.emoji+'</div>';
+    html+='<div class="cart-item-info">';
+    html+='<div class="cart-item-name">'+c.name+'</div>';
+    html+='<div class="cart-item-detail">Tam. '+c.size+' &middot; Qtd. '+c.quantity+'</div>';
+    html+='<div class="cart-item-price">'+fmt(c.price*c.quantity)+'</div>';
+    html+='</div>';
+    html+='<button class="cart-item-remove" data-pid="'+c.productId+'" data-sz="'+c.size+'" onclick="removeFromCart(this)">&#x2715;</button>';
+    html+='</div>';
+  }
+  container.innerHTML=html;
+  var cartTotal=document.getElementById('cartTotal');
   if(cartTotal)cartTotal.textContent=fmt(total);
 }
+
 
 function openCart(){document.getElementById('cart-overlay').classList.add('open')}
 function closeCart(){document.getElementById('cart-overlay').classList.remove('open')}
