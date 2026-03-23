@@ -8,7 +8,7 @@ const CORS = {
   "Content-Type": "application/json",
 };
 
-const KEYS = ["s24_inv","s24_sales","s24_cust","s24_exp","s24_products"];
+const KEYS = ["s24_inv","s24_sales","s24_cust","s24_exp","s24_products","s24_orders"];
 
 exports.handler = async (event) => {
   if (event.httpMethod === "OPTIONS") return { statusCode: 204, headers: CORS, body: "" };

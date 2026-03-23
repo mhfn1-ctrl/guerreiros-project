@@ -3,10 +3,10 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover"/>
-<title>Guerreiros — Vestuário premium</title>
+<title>Studio 24 Fitness — Vestuário de Elite</title>
 <meta name="description" content="Peças desenvolvidas para quem leva o corpo a sério. Poliamida de alta performance, corte atlético, acabamento premium."/>
 <meta name="theme-color" content="#050505"/>
-<meta property="og:title" content="Guerreiros"/>
+<meta property="og:title" content="Studio 24 Fitness"/>
 <meta property="og:description" content="Vista a sua melhor versão."/>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
@@ -533,15 +533,15 @@ footer{
 <body>
 
 <!-- ── WhatsApp ── -->
-<a href="https://wa.me/5586998097010?text=Olá! Vi o catálogo Guerreiros e quero saber mais 👕" target="_blank" class="whatsapp-btn" title="Fale conosco no WhatsApp">💬</a>
+<a href="https://wa.me/5582999999999?text=Olá! Vi o catálogo Studio 24 e quero saber mais 👕" target="_blank" class="whatsapp-btn" title="Fale conosco no WhatsApp">💬</a>
 
 <!-- ── Header ── -->
 <header id="header">
   <a href="#" class="logo">
     <div class="logo-icon">👕</div>
     <div>
-      <div class="logo-text">Guerreiros</div>
-      <div class="logo-sub">Fitness · Maceió - Serraria</div>
+      <div class="logo-text">Studio 24</div>
+      <div class="logo-sub">Fitness · Maceió</div>
     </div>
   </a>
   <button class="cart-btn" onclick="openCart()">
@@ -579,13 +579,13 @@ footer{
         <span class="story-emoji">🏋️</span>
         <div class="story-quote">
           <blockquote>"O treino começa quando você veste a peça certa."</blockquote>
-          <cite>— Fundador, Nicolas Gabriel </cite>
+          <cite>— Fundador, Studio 24 Fitness</cite>
         </div>
       </div>
       <div>
         <span class="section-label">Nossa história</span>
         <h2 class="section-title">CRIADO POR<br>QUEM VIVE<br><span style="color:var(--gold)">O ESPORTE</span></h2>
-        <p class="section-body">A Guerreiros de uma insatisfação: as roupas de academia ou eram desconfortáveis, ou eram caras demais, ou não duravam nada. Criamos uma alternativa: poliamida de alta compressão, corte atlético inteligente e acabamento que resiste a centenas de lavagens.</p>
+        <p class="section-body">A Studio 24 nasceu de uma insatisfação: as roupas de academia ou eram desconfortáveis, ou eram caras demais, ou não duravam nada. Criamos uma alternativa: poliamida de alta compressão, corte atlético inteligente e acabamento que resiste a centenas de lavagens.</p>
         <div class="story-features">
           <div class="feature-item">
             <div class="feature-icon">💧</div>
@@ -641,7 +641,7 @@ footer{
   <div class="container" style="position:relative;z-index:1">
     <span class="section-label" style="display:block;text-align:center;margin-bottom:16px">Faça parte</span>
     <h2 class="community-title">MAIS DO QUE<br>UMA ROUPA.<br><span>UM ESTILO</span><br>DE VIDA.</h2>
-    <p class="community-body">Cada peça Guerreiros é um compromisso com você mesmo. Com o seu processo. Com a sua evolução. Quem veste Guerreiros não está apenas treinando — está construindo a melhor versão de si.</p>
+    <p class="community-body">Cada peça Studio 24 é um compromisso com você mesmo. Com o seu processo. Com a sua evolução. Quem veste Studio 24 não está apenas treinando — está construindo a melhor versão de si.</p>
     <div class="perks">
       <div class="perk">
         <div class="perk-icon">🚀</div>
@@ -716,7 +716,7 @@ footer{
 
 <!-- ── Footer ── -->
 <footer>
-  <div class="footer-logo">Guerreiros/div>
+  <div class="footer-logo">STUDIO 24</div>
   <div class="footer-tagline">Fitness · Maceió · Alagoas</div>
   <div class="footer-links">
     <a href="https://wa.me/5582999999999" class="footer-link" target="_blank">WhatsApp</a>
@@ -724,7 +724,7 @@ footer{
     <a href="#story" class="footer-link">Nossa História</a>
     <a href="#community" class="footer-link">Comunidade</a>
   </div>
-  <p class="footer-copy">© 2025 Guerreiros. Todos os direitos reservados. · Guerreirosmcz.com.br</p>
+  <p class="footer-copy">© 2025 Studio 24 Fitness. Todos os direitos reservados. · studio24fitness.com.br</p>
 </footer>
 
 <!-- ── Cart sidebar ── -->
@@ -768,6 +768,29 @@ footer{
         <label>WhatsApp / Telefone</label>
         <input type="tel" id="custPhone" placeholder="(82) 9 0000-0000"/>
       </div>
+      <!-- Entrega -->
+      <div class="field">
+        <label>Forma de entrega</label>
+        <div class="pay-options">
+          <div class="pay-opt selected" data-delivery="retirada" onclick="selectDelivery(this)">🏪 Retirar na loja</div>
+          <div class="pay-opt" data-delivery="entrega" onclick="selectDelivery(this)">🚚 Entrega (+R$10)</div>
+        </div>
+      </div>
+      <div id="delivery-fields" style="display:none">
+        <div class="field">
+          <label>Rua e número</label>
+          <input type="text" id="deliveryStreet" placeholder="Ex: Rua das Flores, 123"/>
+        </div>
+        <div class="field">
+          <label>Bairro</label>
+          <input type="text" id="deliveryNeighborhood" placeholder="Ex: Centro"/>
+        </div>
+        <div class="field">
+          <label>Complemento (opcional)</label>
+          <input type="text" id="deliveryComplement" placeholder="Ex: Apto 2, casa dos fundos"/>
+        </div>
+      </div>
+      <!-- Pagamento -->
       <div class="field">
         <label>Forma de pagamento</label>
         <div class="pay-options" id="payOptions">
@@ -777,8 +800,29 @@ footer{
           <div class="pay-opt" data-pay="crédito" onclick="selectPay(this)">💎 Crédito</div>
         </div>
       </div>
+      <!-- Campos cartão -->
+      <div id="card-fields" style="display:none">
+        <div class="field">
+          <label>Nome no cartão</label>
+          <input type="text" id="cardName" placeholder="Como aparece no cartão"/>
+        </div>
+        <div class="field">
+          <label>Número do cartão</label>
+          <input type="text" id="cardNumber" placeholder="0000 0000 0000 0000" maxlength="19" oninput="fmtCard(this)"/>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div class="field">
+            <label>Validade</label>
+            <input type="text" id="cardExpiry" placeholder="MM/AA" maxlength="5" oninput="fmtExpiry(this)"/>
+          </div>
+          <div class="field">
+            <label>CVV</label>
+            <input type="text" id="cardCVV" placeholder="123" maxlength="4"/>
+          </div>
+        </div>
+      </div>
       <div id="pix-info" style="background:rgba(212,168,67,.08);border:1px solid rgba(212,168,67,.25);border-radius:8px;padding:14px;margin-bottom:16px;font-size:13px;color:rgba(232,232,224,.7);line-height:1.6">
-        <strong style="color:var(--gold)">PIX:</strong> Chave — <strong style="color:var(--white)">murilohenrique1673@gmail.com</strong><br/>
+        <strong style="color:var(--gold)">PIX:</strong> Chave — <strong style="color:var(--white)">studio24@email.com</strong><br/>
         <span style="font-size:11px">Envie o comprovante via WhatsApp após o pedido</span>
       </div>
       <button class="confirm-btn" onclick="confirmOrder()">🏆 Confirmar Pedido</button>
@@ -829,6 +873,11 @@ let inventory={};
 let selectedSizes={};
 let currentFilter='all';
 let selectedPayMethod='pix';
+let selectedDelivery='retirada';
+
+// ── Card formatting helpers ───────────────────────────────────────────────────
+function fmtCard(el){el.value=el.value.replace(/\D/g,'').replace(/(.{4})/g,'$1 ').trim();}
+function fmtExpiry(el){el.value=el.value.replace(/\D/g,'').replace(/^(.{2})(.+)/,'$1/$2');}
 
 // ── Load inventory from management system ─────────────────────────────────────
 function loadInventory(){
@@ -993,27 +1042,34 @@ function handleOverlayClick(e){if(e.target===document.getElementById('cart-overl
 function openCheckout(){
   if(cart.length===0)return;
   closeCart();
-  // Build order summary
-  const total=cart.reduce((a,c)=>a+c.price*c.quantity,0);
-  const rows=cart.map(c=>`
-    <div class="order-row">
-      <span>${c.name} ${c.size} x${c.quantity}</span>
-      <span>${fmt(c.price*c.quantity)}</span>
-    </div>`).join('');
-  document.getElementById('orderSummary').innerHTML=rows+`
-    <div class="order-row total">
-      <span>Total</span>
-      <span>${fmt(total)}</span>
-    </div>`;
+  updateOrderSummary();
   document.getElementById('checkout-modal').classList.add('open');
 }
 function closeCheckout(){document.getElementById('checkout-modal').classList.remove('open')}
 
 function selectPay(el){
-  document.querySelectorAll('.pay-opt').forEach(b=>b.classList.remove('selected'));
+  document.querySelectorAll('#payOptions .pay-opt').forEach(b=>b.classList.remove('selected'));
   el.classList.add('selected');
   selectedPayMethod=el.getAttribute('data-pay');
   document.getElementById('pix-info').style.display=selectedPayMethod==='pix'?'block':'none';
+  document.getElementById('card-fields').style.display=(selectedPayMethod==='débito'||selectedPayMethod==='crédito')?'block':'none';
+}
+
+function selectDelivery(el){
+  document.querySelectorAll('[data-delivery]').forEach(b=>b.classList.remove('selected'));
+  el.classList.add('selected');
+  selectedDelivery=el.getAttribute('data-delivery');
+  document.getElementById('delivery-fields').style.display=selectedDelivery==='entrega'?'block':'none';
+  updateOrderSummary();
+}
+
+function updateOrderSummary(){
+  const subtotal=cart.reduce((a,c)=>a+c.price*c.quantity,0);
+  const delivery=selectedDelivery==='entrega'?10:0;
+  const total=subtotal+delivery;
+  const rows=cart.map(c=>'<div class="order-row"><span>'+c.name+' '+c.size+' x'+c.quantity+'</span><span>'+fmt(c.price*c.quantity)+'</span></div>').join('');
+  const deliveryRow=delivery>0?'<div class="order-row"><span>🚚 Taxa de entrega</span><span>'+fmt(delivery)+'</span></div>':'';
+  document.getElementById('orderSummary').innerHTML=rows+deliveryRow+'<div class="order-row total"><span>Total</span><span>'+fmt(total)+'</span></div>';
 }
 
 function confirmOrder(){
@@ -1021,33 +1077,79 @@ function confirmOrder(){
   const phone=document.getElementById('custPhone').value.trim();
   if(!name){alert('Por favor, informe seu nome.');return;}
 
+  // Delivery validation
+  let deliveryAddress={};
+  if(selectedDelivery==='entrega'){
+    const street=document.getElementById('deliveryStreet').value.trim();
+    const neighborhood=document.getElementById('deliveryNeighborhood').value.trim();
+    if(!street||!neighborhood){alert('Por favor, informe o endereço de entrega.');return;}
+    deliveryAddress={street,neighborhood,complement:document.getElementById('deliveryComplement').value.trim()};
+  }
+
+  // Card validation
+  let cardData={};
+  if(selectedPayMethod==='débito'||selectedPayMethod==='crédito'){
+    const cardName=document.getElementById('cardName').value.trim();
+    const cardNumber=document.getElementById('cardNumber').value.trim();
+    const cardExpiry=document.getElementById('cardExpiry').value.trim();
+    const cardCVV=document.getElementById('cardCVV').value.trim();
+    if(!cardName||!cardNumber||!cardExpiry||!cardCVV){alert('Por favor, preencha todos os dados do cartão.');return;}
+    cardData={cardName,cardNumber,cardExpiry,cardCVV};
+  }
+
   loadInventory();
 
-  // Verify stock again before confirming
   for(const item of cart){
     const st=getStock(item.productId,item.size);
     if(item.quantity>st){
-      alert(`Desculpe! O produto "${item.name}" tam. ${item.size} ficou sem estoque enquanto você montava o pedido. Remova-o do carrinho e tente novamente.`);
+      alert('Desculpe! O produto "'+item.name+'" tam. '+item.size+' ficou sem estoque. Remova-o e tente novamente.');
       closeCheckout();cart=cart.filter(c=>!(c.productId===item.productId&&c.size===item.size));
       updateCartUI();renderProducts(currentFilter);return;
     }
   }
 
-  // ── Find or create customer ───────────────────────────────────────────────
+  // Customer
   let customers=load('s24_cust',[]);
   let cust=customers.find(c=>c.phone&&c.phone===phone);
-  if(!cust&&phone){
-    cust={id:`C${Date.now()}`,name,phone,createdAt:today()};
-    customers.push(cust);save('s24_cust',customers);
-  }else if(!cust){
-    cust={id:`C${Date.now()}`,name,phone:'',createdAt:today()};
+  if(!cust){
+    cust={id:'C'+Date.now(),name,phone:phone||'',createdAt:today()};
     customers.push(cust);save('s24_cust',customers);
   }
 
-  // ── Create sales records ──────────────────────────────────────────────────
+  // Delivery fee
+  const deliveryFee=selectedDelivery==='entrega'?10:0;
+  const subtotal=cart.reduce((a,c)=>a+c.price*c.quantity,0);
+  const total=subtotal+deliveryFee;
+
+  // Order object
+  const orderId='PED'+Date.now();
+  const order={
+    id:orderId,
+    date:today(),
+    datetime:new Date().toISOString(),
+    customerId:cust.id,
+    customerName:name,
+    customerPhone:phone,
+    items:cart.map(item=>({productId:item.productId,name:item.name,size:item.size,quantity:item.quantity,price:item.price,subtotal:item.price*item.quantity})),
+    subtotal,
+    deliveryFee,
+    total,
+    payMethod:selectedPayMethod,
+    cardData:Object.keys(cardData).length?cardData:null,
+    delivery:selectedDelivery,
+    deliveryAddress:Object.keys(deliveryAddress).length?deliveryAddress:null,
+    status:'novo',
+    source:'catalogo',
+  };
+
+  // Save order
+  const orders=load('s24_orders',[]);
+  save('s24_orders',[order,...orders]);
+
+  // Sales records (for dashboard compatibility)
   const sales=load('s24_sales',[]);
   const newSales=cart.map(item=>({
-    id:`V${Date.now()}_${item.productId}_${item.size}`,
+    id:'V'+Date.now()+'_'+item.productId+'_'+item.size,
     date:today(),
     productId:item.productId,
     size:item.size,
@@ -1060,10 +1162,11 @@ function confirmOrder(){
     customerName:name,
     payMethod:selectedPayMethod,
     product:item.name,
+    orderId,
   }));
   save('s24_sales',[...newSales,...sales]);
 
-  // ── Decrement inventory ───────────────────────────────────────────────────
+  // Decrement inventory
   const newInv={...inventory};
   cart.forEach(item=>{
     if(!newInv[item.productId])newInv[item.productId]={};
@@ -1073,27 +1176,27 @@ function confirmOrder(){
   save('s24_inv',newInv);
   inventory=newInv;
 
-  // ── Success ───────────────────────────────────────────────────────────────
-  const total=cart.reduce((a,c)=>a+c.price*c.quantity,0);
-  const payLabel={pix:'PIX',dinheiro:'dinheiro',débito:'cartão de débito',crédito:'cartão de crédito'}[selectedPayMethod]||selectedPayMethod;
+  // Success message
+  const payLabel={pix:'PIX',dinheiro:'Dinheiro',débito:'Cartão de Débito',crédito:'Cartão de Crédito'}[selectedPayMethod]||selectedPayMethod;
+  const deliveryMsg=selectedDelivery==='entrega'?'Entrega no endereço informado (taxa R$10,00).':'Retirada na loja.';
   document.getElementById('successMsg').innerHTML=
-    `Olá, <strong style="color:var(--gold)">${name}</strong>! 🎉<br/>
-    Seu pedido de <strong>${fmt(total)}</strong> foi registrado.<br/>
-    Pagamento via <strong>${payLabel}</strong>.<br/><br/>
-    <span style="font-size:13px;opacity:.7">Entraremos em contato no WhatsApp para combinar a entrega. Bem-vindo(a) à família Guerreiros!</span>`;
+    'Olá, <strong style="color:var(--gold)">'+name+'</strong>! 🎉<br/>'+
+    'Pedido <strong>#'+orderId+'</strong> registrado.<br/>'+
+    'Total: <strong>'+fmt(total)+'</strong> via <strong>'+payLabel+'</strong>.<br/>'+
+    deliveryMsg+'<br/><br/>'+
+    '<span style="font-size:13px;opacity:.7">Entraremos em contato pelo WhatsApp para confirmar. Bem-vindo(a) à família Studio 24!</span>';
 
   closeCheckout();
   document.getElementById('success-modal').classList.add('open');
   cart=[];updateCartUI();renderProducts(currentFilter);
 
-  // Dispatch storage event for other tabs on same device
+  // Push to cloud
   window.dispatchEvent(new StorageEvent('storage',{key:'s24_inv',newValue:JSON.stringify(newInv)}));
-  // Push to cloud so management system on other devices syncs
+  const allOrders=load('s24_orders',[]);
   const allSales=load('s24_sales',[]);
   const allCust=load('s24_cust',[]);
-  pushOrderToCloud(newInv,allSales,allCust);
+  pushOrderToCloud(newInv,allSales,allCust,allOrders);
 }
-
 function closeSuccess(){
   document.getElementById('success-modal').classList.remove('open');
   document.getElementById('custName').value='';
@@ -1126,8 +1229,8 @@ async function syncFromCloud(){
   }catch(_){}
 }
 
-async function pushOrderToCloud(newInv,sales,customers){
-  try{await Promise.all([cloudSet('s24_inv',newInv),cloudSet('s24_sales',sales),cloudSet('s24_cust',customers)]);}catch(_){}
+async function pushOrderToCloud(newInv,sales,customers,orders){
+  try{await Promise.all([cloudSet('s24_inv',newInv),cloudSet('s24_sales',sales),cloudSet('s24_cust',customers),cloudSet('s24_orders',orders||[])]);}catch(_){}
 }
 
 
