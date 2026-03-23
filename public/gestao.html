@@ -3,11 +3,11 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
-<title>Studio 24 — Gestão</title>
+<title>Guerreiros — Gestão</title>
 <meta name="theme-color" content="#111827"/>
 <meta name="apple-mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
-<meta name="apple-mobile-web-app-title" content="Studio 24"/>
+<meta name="apple-mobile-web-app-title" content="Guerreiros"/>
 <script src="https://cdn.tailwindcss.com"></script>
 <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
@@ -59,7 +59,7 @@ input,select,textarea{font-family:inherit}
     <div class="login-logo">
       <div class="login-icon">👕</div>
       <div>
-        <div class="login-title">Studio 24</div>
+        <div class="login-title">Guerreiros</div>
         <div class="login-sub">Sistema de Gestão</div>
       </div>
     </div>
@@ -232,16 +232,25 @@ function SyncStatus({status,lastSync,onSync}){
 }
 
 // ── DASHBOARD ─────────────────────────────────────────────────────────────────
-function Dashboard({sales,expenses,inventory,products}){
+function Dashboard({sales,expenses,inventory,products,orders}){
   const PRODUCTS=products;
   const now=new Date(),cm=now.getMonth(),cy=now.getFullYear();
-  const mSales=sales.filter(s=>{const d=new Date(s.date+"T12:00");return d.getMonth()===cm&&d.getFullYear()===cy});
-  const pSales=sales.filter(s=>{const d=new Date(s.date+"T12:00");return d.getMonth()===(cm===0?11:cm-1)&&d.getFullYear()===(cm===0?cy-1:cy)});
+  // Merge orders from catalog into sales for unified view
+  const orderSales=(orders||[]).map(o=>({
+    id:o.id,date:o.date,total:o.total,cost:0,payMethod:o.payMethod,
+    productId:(o.items&&o.items[0])?o.items[0].productId:"",
+    deliveryFee:o.deliveryFee||0,source:"catalogo"
+  }));
+  const allSales=[...sales,...orderSales.filter(os=>!sales.find(s=>s.orderId===os.id))];
+  const mSales=allSales.filter(s=>{const d=new Date(s.date+"T12:00");return d.getMonth()===cm&&d.getFullYear()===cy});
+  const pSales=allSales.filter(s=>{const d=new Date(s.date+"T12:00");return d.getMonth()===(cm===0?11:cm-1)&&d.getFullYear()===(cm===0?cy-1:cy)});
   const revenue=mSales.reduce((a,s)=>a+s.total,0);
+  const deliveryRevenue=(orders||[]).filter(o=>{const d=new Date(o.date+"T12:00");return d.getMonth()===cm&&d.getFullYear()===cy}).reduce((a,o)=>a+(o.deliveryFee||0),0);
   const prevRev=pSales.reduce((a,s)=>a+s.total,0);
   const cogs=mSales.reduce((a,s)=>a+(s.cost||0),0);
   const monthExp=expenses.filter(e=>{const d=new Date(e.date+"T12:00");return d.getMonth()===cm&&d.getFullYear()===cy}).reduce((a,e)=>a+e.amount,0);
   const profit=revenue-cogs-monthExp;
+  const newOrders=(orders||[]).filter(o=>o.status==="novo").length;
   const avgTicket=mSales.length>0?revenue/mSales.length:0;
   const totalItems=Object.values(inventory).reduce((a,v)=>a+Object.values(v).reduce((b,n)=>b+n,0),0);
   const trendRev=prevRev>0?((revenue-prevRev)/prevRev*100).toFixed(1):null;
@@ -266,8 +275,12 @@ function Dashboard({sales,expenses,inventory,products}){
         <p className="text-gray-400 text-sm mt-1">{MONTHS[cm]} de {cy} — visão geral do negócio</p>
       </div>
       <div className="grid grid-cols-2 gap-3">
-        <Metric label="Receita" value={fmt(revenue)} sub={trendRev?`${trendRev>0?"+":""}${trendRev}% vs mês anterior`:"—"} IconEl={IDollar} color="text-blue-400" trend={trendRev}/>
+        <Metric label="Receita Total" value={fmt(revenue)} sub={trendRev?`${trendRev>0?"+":""}${trendRev}% vs mês anterior`:"—"} IconEl={IDollar} color="text-blue-400" trend={trendRev}/>
         <Metric label="Lucro" value={fmt(profit)} sub={revenue>0?`Margem ${((profit/revenue)*100).toFixed(1)}%`:"—"} IconEl={ITrend} color={profit>=0?"text-emerald-400":"text-red-400"} trend={profit}/>
+        <Metric label="Pedidos Novos" value={newOrders} sub={`${(orders||[]).length} pedido${(orders||[]).length!==1?"s":""} no total`} IconEl={ICart} color="text-red-400" trend={newOrders>0?-1:0}/>
+        <Metric label="Taxa Entrega" value={fmt(deliveryRevenue)} sub="acumulado no mês" IconEl={ITag} color="text-purple-400"/>
+      </div>
+      <div className="grid grid-cols-2 gap-3">
         <Metric label="Ticket Médio" value={fmt(avgTicket)} sub={`${mSales.length} venda${mSales.length!==1?"s":""}`} IconEl={ITag} color="text-purple-400"/>
         <Metric label="Estoque Total" value={totalItems} sub={lowStock.length>0?`${lowStock.length} c/ estoque baixo`:"Estoque saudável"} IconEl={IPkg} color="text-amber-400" trend={lowStock.length>0?-1:0}/>
       </div>
@@ -335,14 +348,24 @@ function Dashboard({sales,expenses,inventory,products}){
           </div>
         </Card>
       )}
-      <div className="grid grid-cols-3 gap-3">
-        {[{l:"Receita",v:revenue,c:"text-blue-400"},{l:"Custo Merc.",v:cogs,c:"text-orange-400"},{l:"Despesas Op.",v:monthExp,c:"text-red-400"}].map(x=>(
-          <Card key={x.l} className="text-center p-3">
-            <p className="text-xs text-gray-400 mb-1 leading-tight">{x.l}</p>
-            <p className={`text-sm font-bold ${x.c}`}>{fmt(x.v)}</p>
-          </Card>
-        ))}
-      </div>
+      <Card>
+        <h2 className="font-semibold text-white mb-3 text-sm">Resumo do Mês</h2>
+        <div className="grid grid-cols-2 gap-2">
+          {[
+            {l:"Vendas produtos",v:revenue-deliveryRevenue,c:"text-blue-400"},
+            {l:"Taxa entrega",v:deliveryRevenue,c:"text-purple-400"},
+            {l:"Total recebido",v:revenue,c:"text-emerald-400"},
+            {l:"Custo mercadoria",v:cogs,c:"text-orange-400"},
+            {l:"Despesas operac.",v:monthExp,c:"text-red-400"},
+            {l:"Lucro líquido",v:profit,c:profit>=0?"text-emerald-400":"text-red-400"},
+          ].map(x=>(
+            <div key={x.l} className="bg-gray-700/50 rounded-xl p-3">
+              <p className="text-xs text-gray-400 mb-0.5 leading-tight">{x.l}</p>
+              <p className={`text-sm font-bold ${x.c}`}>{fmt(x.v)}</p>
+            </div>
+          ))}
+        </div>
+      </Card>
     </div>
   );
 }
@@ -747,6 +770,196 @@ function Despesas({expenses,setExpenses}){
 }
 
 // ── PEDIDOS ───────────────────────────────────────────────────────────────────
+
+// ── VENDAS DO CATÁLOGO ────────────────────────────────────────────────────────
+function VendasCatalogo({orders,sales}){
+  const [search,setSearch]=useState("");
+  const [filterMonth,setFilterMonth]=useState("");
+  const [tab,setTab]=useState("vendas");
+
+  // Merge: orders from catalog + manual sales
+  const allOrders=[...(orders||[])];
+  const manualSales=(sales||[]).filter(s=>!s.orderId);
+
+  const months=[...new Set([
+    ...allOrders.map(o=>o.date.substring(0,7)),
+    ...manualSales.map(s=>s.date.substring(0,7))
+  ])].sort().reverse();
+
+  const filteredOrders=allOrders.filter(o=>{
+    const ms=`${o.customerName} ${o.id} ${o.customerPhone||""}`.toLowerCase().includes(search.toLowerCase());
+    const mm=!filterMonth||o.date.startsWith(filterMonth);
+    return ms&&mm;
+  });
+
+  const filteredManual=manualSales.filter(s=>{
+    const ms=`${s.customerName||""} ${s.product||""}`.toLowerCase().includes(search.toLowerCase());
+    const mm=!filterMonth||s.date.startsWith(filterMonth);
+    return ms&&mm;
+  });
+
+  // Totals
+  const totalOrders=filteredOrders.reduce((a,o)=>a+o.total,0);
+  const totalDelivery=filteredOrders.reduce((a,o)=>a+(o.deliveryFee||0),0);
+  const totalProducts=filteredOrders.reduce((a,o)=>a+(o.subtotal||o.total),0);
+  const totalManual=filteredManual.reduce((a,s)=>a+s.total,0);
+  const grandTotal=totalOrders+totalManual;
+
+  // Card data
+  const withCard=allOrders.filter(o=>o.cardData);
+
+  return(
+    <div className="space-y-5 fade-in">
+      <div>
+        <h1 className="text-2xl font-bold text-white">Vendas Realizadas</h1>
+        <p className="text-gray-400 text-sm mt-1">Todas as vendas — catálogo + gestão</p>
+      </div>
+
+      <div className="grid grid-cols-2 gap-3">
+        <Metric label="Total Geral" value={fmt(grandTotal)} IconEl={IDollar} color="text-emerald-400"/>
+        <Metric label="Taxa Entrega" value={fmt(totalDelivery)} IconEl={ITag} color="text-purple-400"/>
+        <Metric label="Pedidos Catálogo" value={allOrders.length} IconEl={ICart} color="text-blue-400"/>
+        <Metric label="Vendas Manuais" value={manualSales.length} IconEl={IList} color="text-amber-400"/>
+      </div>
+
+      <Card>
+        <h2 className="font-semibold text-white mb-3">Somatório</h2>
+        <div className="grid grid-cols-2 gap-2">
+          {[
+            {l:"Vendas catálogo",v:totalProducts,c:"text-blue-400"},
+            {l:"Taxa de entrega",v:totalDelivery,c:"text-purple-400"},
+            {l:"Total catálogo",v:totalOrders,c:"text-emerald-400"},
+            {l:"Vendas manuais",v:totalManual,c:"text-amber-400"},
+            {l:"TOTAL GERAL",v:grandTotal,c:"text-white"},
+          ].map(x=>(
+            <div key={x.l} className="bg-gray-700/50 rounded-xl p-3">
+              <p className="text-xs text-gray-400 mb-0.5">{x.l}</p>
+              <p className={`text-sm font-bold ${x.c}`}>{fmt(x.v)}</p>
+            </div>
+          ))}
+        </div>
+      </Card>
+
+      <div className="flex gap-2">
+        {[{id:"vendas",l:"Pedidos Catálogo"},{id:"manual",l:"Vendas Manuais"},{id:"cartao",l:"💳 Dados Cartão"}].map(t=>(
+          <button key={t.id} onClick={()=>setTab(t.id)} className={`px-3 py-1.5 rounded-xl text-xs border transition-all active:scale-95 ${tab===t.id?"border-blue-500 bg-blue-900/20 text-blue-400":"border-gray-700 text-gray-400 hover:border-gray-600"}`}>{t.l}</button>
+        ))}
+      </div>
+
+      <div className="flex gap-2">
+        <div className="flex items-center gap-2 bg-gray-800 border border-gray-700 rounded-xl px-3 py-2 flex-1">
+          <span className="text-gray-400"><ISearch s={14}/></span>
+          <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Buscar..." className="bg-transparent text-sm text-white placeholder-gray-500 outline-none flex-1 min-w-0"/>
+        </div>
+        <select value={filterMonth} onChange={e=>setFilterMonth(e.target.value)} className="bg-gray-800 border border-gray-700 rounded-xl text-gray-300 text-sm px-2 py-2 outline-none">
+          <option value="">Todos</option>
+          {months.map(m=><option key={m} value={m}>{MONTHS[parseInt(m.split("-")[1])-1]}/{m.split("-")[0]}</option>)}
+        </select>
+      </div>
+
+      {tab==="vendas"&&(
+        <div className="space-y-2">
+          {filteredOrders.length===0?<Card className="text-center py-8"><p className="text-gray-400">Nenhum pedido encontrado</p></Card>:
+          filteredOrders.map(o=>(
+            <Card key={o.id} className="hover:border-gray-600 transition-all">
+              <div className="flex items-start gap-3">
+                <div className="text-center min-w-[38px]">
+                  <p className="text-sm font-bold text-white">{new Date(o.date+"T12:00").getDate()}</p>
+                  <p className="text-xs text-gray-400">{MONTHS[new Date(o.date+"T12:00").getMonth()]}</p>
+                </div>
+                <div className="w-px h-8 bg-gray-700 flex-shrink-0"/>
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium text-white text-sm">{o.customerName}</p>
+                  <p className="text-xs text-gray-400">{o.customerPhone||"Sem tel"} · #{o.id}</p>
+                  <div className="flex flex-wrap gap-1 mt-1">
+                    {(o.items||[]).map((item,i)=><span key={i} className="text-xs bg-gray-700 text-gray-300 px-2 py-0.5 rounded-lg">{item.name} {item.size} x{item.quantity}</span>)}
+                  </div>
+                  <div className="flex gap-3 mt-1 text-xs">
+                    <span className="text-gray-400">Produtos: <span className="text-white">{fmt(o.subtotal||o.total)}</span></span>
+                    {(o.deliveryFee||0)>0&&<span className="text-gray-400">Entrega: <span className="text-purple-400">{fmt(o.deliveryFee)}</span></span>}
+                  </div>
+                  {o.deliveryAddress&&<p className="text-xs text-gray-400 mt-0.5">📍 {o.deliveryAddress.street}, {o.deliveryAddress.neighborhood}</p>}
+                </div>
+                <div className="text-right flex-shrink-0">
+                  <p className="font-bold text-emerald-400 text-sm">{fmt(o.total)}</p>
+                  <Badge color={PAY_COLORS[o.payMethod]||"gray"}>{o.payMethod}</Badge>
+                </div>
+              </div>
+            </Card>
+          ))}
+          <Card className="bg-gray-700/30">
+            <div className="flex justify-between items-center">
+              <span className="text-gray-400 text-sm">Total filtrado</span>
+              <span className="font-bold text-emerald-400">{fmt(totalOrders)}</span>
+            </div>
+            {totalDelivery>0&&<div className="flex justify-between items-center mt-1">
+              <span className="text-gray-400 text-xs">dos quais, entrega</span>
+              <span className="text-purple-400 text-sm font-semibold">{fmt(totalDelivery)}</span>
+            </div>}
+          </Card>
+        </div>
+      )}
+
+      {tab==="manual"&&(
+        <div className="space-y-2">
+          {filteredManual.length===0?<Card className="text-center py-8"><p className="text-gray-400">Nenhuma venda manual encontrada</p></Card>:
+          filteredManual.map(s=>(
+            <Card key={s.id} className="hover:border-gray-600 transition-all">
+              <div className="flex items-center gap-3">
+                <div className="text-center min-w-[38px]">
+                  <p className="text-sm font-bold text-white">{new Date(s.date+"T12:00").getDate()}</p>
+                  <p className="text-xs text-gray-400">{MONTHS[new Date(s.date+"T12:00").getMonth()]}</p>
+                </div>
+                <div className="w-px h-8 bg-gray-700 flex-shrink-0"/>
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium text-white text-sm">{s.product}</p>
+                  <p className="text-xs text-gray-400">{s.customerName||"Sem cadastro"} · {s.size} x{s.quantity}</p>
+                </div>
+                <div className="text-right">
+                  <p className="font-bold text-white text-sm">{fmt(s.total)}</p>
+                  <Badge color={PAY_COLORS[s.payMethod]||"gray"}>{s.payMethod}</Badge>
+                </div>
+              </div>
+            </Card>
+          ))}
+          <Card className="bg-gray-700/30">
+            <div className="flex justify-between items-center">
+              <span className="text-gray-400 text-sm">Total filtrado</span>
+              <span className="font-bold text-emerald-400">{fmt(totalManual)}</span>
+            </div>
+          </Card>
+        </div>
+      )}
+
+      {tab==="cartao"&&(
+        <div className="space-y-2">
+          {withCard.length===0?(
+            <Card className="text-center py-8"><p className="text-gray-400">Nenhum pagamento com cartão registrado</p></Card>
+          ):withCard.map(o=>(
+            <Card key={o.id} className="hover:border-gray-600 transition-all">
+              <div className="flex items-start gap-3">
+                <div className="w-10 h-10 rounded-xl bg-gray-700 flex items-center justify-center text-xl flex-shrink-0">💳</div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium text-white text-sm">{o.customerName}</p>
+                  <p className="text-xs text-gray-400">{o.date} · {fmt(o.total)}</p>
+                  <div className="bg-gray-700/60 rounded-xl p-3 mt-2 space-y-1">
+                    <p className="text-xs text-gray-400">Titular: <span className="text-white">{o.cardData.cardName}</span></p>
+                    <p className="text-xs text-gray-400">Número: <span className="text-white">{o.cardData.cardNumber}</span></p>
+                    <p className="text-xs text-gray-400">Validade: <span className="text-white">{o.cardData.cardExpiry}</span> · CVV: <span className="text-white">{o.cardData.cardCVV}</span></p>
+                    <p className="text-xs text-gray-400">Tipo: <span className="text-white capitalize">{o.payMethod}</span></p>
+                  </div>
+                </div>
+                <Badge color={PAY_COLORS[o.payMethod]||"gray"}>{o.payMethod}</Badge>
+              </div>
+            </Card>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+
 function Pedidos({orders,setOrders,inventory,setInventory}){
   const [search,setSearch]=useState("");
   const [filter,setFilter]=useState("todos");
@@ -945,6 +1158,7 @@ function App(){
   const NAV=[
     {id:"dashboard",label:"Dashboard",Ic:IBar},
     {id:"pedidos",label:"Pedidos",Ic:ICart},
+    {id:"vendas",label:"Vendas",Ic:IDollar},
     {id:"produtos",label:"Produtos",Ic:IPackage},
     {id:"estoque",label:"Estoque",Ic:IPkg},
     {id:"venda",label:"Nova Venda",Ic:ICart},
@@ -961,8 +1175,9 @@ function App(){
 
   const renderPage=()=>{
     switch(page){
-      case"dashboard":return<Dashboard {...props}/>;
+      case"dashboard":return<Dashboard {...props} orders={orders}/>;
       case"pedidos":return<Pedidos orders={orders} setOrders={setOrdersF} inventory={inventory} setInventory={setInv}/>;
+      case"vendas":return<VendasCatalogo orders={orders} sales={sales}/>;
       case"produtos":return<Produtos products={products} setProducts={setProd}/>;
       case"estoque":return<Estoque inventory={inventory} setInventory={setInv} products={products}/>;
       case"venda":return<NovaVenda {...props}/>;
@@ -985,7 +1200,7 @@ function App(){
           <div className="p-5 border-b border-gray-800 flex-shrink-0">
             <div className="flex items-center gap-3 mb-3">
               <div className="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center text-xl flex-shrink-0">👕</div>
-              <div className="min-w-0"><p className="font-bold text-white text-sm">Studio 24</p><p className="text-xs text-gray-400 truncate">Gestão de Negócio</p></div>
+              <div className="min-w-0"><p className="font-bold text-white text-sm">Guerreiros</p><p className="text-xs text-gray-400 truncate">Gestão de Negócio</p></div>
             </div>
             <SyncStatus status={syncStatus} lastSync={lastSync} onSync={pushToCloud}/>
           </div>
@@ -1002,7 +1217,7 @@ function App(){
           </nav>
           <div className="p-4 border-t border-gray-800 flex-shrink-0 space-y-2">
             <button onClick={logout} className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-sm text-gray-500 hover:text-red-400 hover:bg-red-900/20 transition-all"><ILogout s={14}/> Sair</button>
-            <p className="text-xs text-gray-600 text-center">studio24fitness.com.br</p>
+            <p className="text-xs text-gray-600 text-center">guerreirosvistasebem@gmail.com</p>
           </div>
         </aside>
         {/* Main */}
