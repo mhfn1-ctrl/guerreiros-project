@@ -1190,12 +1190,21 @@ function confirmOrder(){
   document.getElementById('success-modal').classList.add('open');
   cart=[];updateCartUI();renderProducts(currentFilter);
 
-  // Push to cloud
+  // Push to cloud — usa dados já montados acima, não relê do localStorage
   window.dispatchEvent(new StorageEvent('storage',{key:'s24_inv',newValue:JSON.stringify(newInv)}));
-  const allOrders=load('s24_orders',[]);
-  const allSales=load('s24_sales',[]);
-  const allCust=load('s24_cust',[]);
-  pushOrderToCloud(newInv,allSales,allCust,allOrders);
+  const _allOrders=[order,...load('s24_orders',[]).filter(o=>o.id!==order.id)];
+  const _allSales=[...newSales,...load('s24_sales',[]).filter(s=>!newSales.find(n=>n.id===s.id))];
+  const _allCust=customers;
+  (async()=>{
+    try{
+      await Promise.all([
+        cloudSet('s24_inv',newInv),
+        cloudSet('s24_sales',_allSales),
+        cloudSet('s24_cust',_allCust),
+        cloudSet('s24_orders',_allOrders)
+      ]);
+    }catch(e){console.error('Erro ao salvar na nuvem:',e);}
+  })();
 }
 function closeSuccess(){
   document.getElementById('success-modal').classList.remove('open');
